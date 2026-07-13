@@ -1,1 +1,21 @@
-<p>landing works!</p>
+@if (invite()) {
+<div class="min-h-screen bg-stone-50 flex flex-col items-center justify-center p-6">
+  <h1 class="text-3xl font-light text-stone-800 mb-2">
+    Welcome, {{ invite()!.guest.name }}
+  </h1>
+  <p class="text-stone-500 mb-2">You are invited to the following events</p>
+
+  <app-countdown-timer />
+
+  @for (event of invite()!.events; track event.id) {
+  <div class="bg-white rounded-xl shadow-sm p-6 mb-4 w-full max-w-md">
+    <h2 class="text-lg font-medium text-stone-800">{{ event.name }}</h2>
+    <p class="text-stone-500 text-sm mt-1">{{ event.date }} · {{ event.time_label }}</p>
+  </div>
+  }
+</div>
+} @else {
+<div class="min-h-screen flex items-center justify-center">
+  <p class="text-stone-400">Loading your invite...</p>
+</div>
+}
