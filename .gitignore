@@ -4,3 +4,30 @@ node_modules/
 dist/
 .angular/
 *.js.map
+
+# Dependencies
+node_modules/
+
+# Environment
+.env
+.env.local
+
+# Build outputs
+dist/
+.angular/
+frontend/wedding-frontend/.angular/ 
+
+# Angular cache
+*.js.map
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+
+# Logs
+*.log
+npm-debug.log*
