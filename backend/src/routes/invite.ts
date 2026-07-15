@@ -16,6 +16,7 @@ router.get('/:token', validateToken, async (req: GuestRequest, res: Response) =>
         name,
         date,
         time_label,
+        venue_name,
         is_visible
       )
     `)
