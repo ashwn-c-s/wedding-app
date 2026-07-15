@@ -1,18 +1,105 @@
 @if (invite()) {
-<div class="min-h-screen bg-stone-50 flex flex-col items-center justify-center p-6">
-  <h1 class="text-3xl font-light text-stone-800 mb-2">
-    Welcome, {{ invite()!.guest.name }}
-  </h1>
-  <p class="text-stone-500 mb-2">You are invited to the following events</p>
+<div class="min-h-screen bg-cream font-sans pb-28">
 
-  <app-countdown-timer />
+  <!-- Hero section -->
+  <section class="relative px-6 md:px-12 lg:px-20 pt-12 lg:pt-20 pb-16 overflow-hidden">
+    <div class="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-center">
 
-  @for (event of invite()!.events; track event.id) {
-  <div class="bg-white rounded-xl shadow-sm p-6 mb-4 w-full max-w-md">
-    <h2 class="text-lg font-medium text-stone-800">{{ event.name }}</h2>
-    <p class="text-stone-500 text-sm mt-1">{{ event.date }} · {{ event.time_label }}</p>
-  </div>
-  }
+      <!-- Text content -->
+      <div class="text-center lg:text-left order-2 lg:order-1">
+        <p class="text-xs tracking-widest uppercase text-forest-light mb-6">
+          Together with their families
+        </p>
+        <h1 class="font-script text-6xl lg:text-7xl text-forest mb-2">
+          Ashwin <span class="text-terracotta px-2">&</span> Amritha
+        </h1>
+        <p class="text-sm tracking-wide uppercase text-text-muted mt-4">
+          15 November 2026 · Thrissur · Ottapalam
+        </p>
+      </div>
+
+      <!-- Illustration with layered depth -->
+      <div class="order-1 lg:order-2 flex justify-center">
+        <div class="relative w-64 h-80 lg:w-80 lg:h-96">
+          <div class="absolute inset-4 translate-x-4 translate-y-4 rounded-bl-4xl rounded-sm bg-forest"></div>
+          <img src="/images/couple-illustration.png" alt="Ashwin and Amritha"
+            class="relative w-full h-full object-cover" />
+        </div>
+      </div>
+
+    </div>
+    <!-- Countdown section -->
+    <section class="bg-white px-6 py-14 mt-16 text-center">
+      <p class="text-xs tracking-widest uppercase text-forest-light mb-6">
+        Counting down to the big day
+      </p>
+      <app-countdown-timer />
+    </section>
+    <!-- Welcome note -->
+    <section class="bg-cream px-6 py-14 text-center">
+      <p class="text-xs tracking-widest uppercase text-forest-light mb-3">
+        Your invitation
+      </p>
+      <h2 class="text-2xl  text-text-primary mb-2">
+        Welcome, <span class="font-bold">{{ invite()!.guest.name }}</span>  
+      </h2>
+      <p class="text-sm text-text-muted">
+        With the blessings of our families, we joyfully invite you to share in our happiness as we unite in marriage.
+      </p>
+    </section>
+
+    <!-- Events list -->
+    <section class="bg-white px-6 py-14">
+      <p class="text-xs tracking-widest uppercase text-forest-light mb-6 text-center">
+        Your events
+      </p>
+
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 max-w-4xl mx-auto">
+        @for (event of invite()!.events; track event.id) {
+        <div class="flex items-center gap-4 bg-cream/50 border border-forest/15 rounded-xl px-5 py-4">
+          <div class="w-10 h-10 rounded-full bg-forest/10 flex items-center justify-center flex-shrink-0">
+            @if (event.slug === 'wedding') {
+            <span class="material-icons text-forest text-lg">favorite_border</span>
+            } @else if (event.slug === 'reception') {
+            <span class="material-icons text-forest text-lg">celebration</span>
+            } @else {
+            <span class="material-icons text-forest text-lg">event</span>
+            }
+          </div>
+          <div class="flex-1">
+            <p class="text-sm font-medium text-text-primary">{{ event.name }}</p>
+            <p class="text-xs text-text-muted">{{ event.date | date: 'EEEE, MMM d, y' }}</p>
+            <p class="text-xs text-text-muted">{{ event.venue_name }}</p>
+          </div>
+          <span class="text-xs font-medium text-terracotta uppercase tracking-wide">
+            {{ event.time_label }}
+          </span>
+        </div>
+        }
+      </div>
+    </section>
+
+  </section>
+  <!-- Sticky bottom nav -->
+  <nav
+    class="fixed bottom-6 left-1/2 -translate-x-1/2 bg-cream border border-forest/20 rounded-full shadow-lg px-6 lg:px-10 py-3 flex gap-8 lg:gap-10 z-50">
+    <a [routerLink]="['/invite', token]" class="flex flex-col items-center gap-1 text-terracotta">
+      <span class="material-icons text-xl">home</span>
+      <span class="text-[10px] uppercase tracking-wide">Home</span>
+    </a>
+    <a [routerLink]="['/invite', token, 'rsvp']" class="flex flex-col items-center gap-1 text-text-muted">
+      <span class="material-icons text-xl">check_circle_outline</span>
+      <span class="text-[10px] uppercase tracking-wide">RSVP</span>
+    </a>
+    <a [routerLink]="['/invite', token, 'venues']" class="flex flex-col items-center gap-1 text-text-muted">
+      <span class="material-icons text-xl">place</span>
+      <span class="text-[10px] uppercase tracking-wide">Venues</span>
+    </a>
+    <a [routerLink]="['/invite', token, 'gallery']" class="flex flex-col items-center gap-1 text-text-muted">
+      <span class="material-icons text-xl">photo_library</span>
+      <span class="text-[10px] uppercase tracking-wide">Gallery</span>
+    </a>
+  </nav>
 </div>
 } @else {
 <div class="min-h-screen flex items-center justify-center">

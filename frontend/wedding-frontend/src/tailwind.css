@@ -1,1 +1,13 @@
 @import "tailwindcss";
+
+@theme {
+  --font-script: 'Great Vibes', cursive;
+  --font-sans: 'DM Sans', sans-serif;
+
+  --color-cream: #FAF6EE;
+  --color-forest: #2D5430;
+  --color-forest-light: #4a7a4e;
+  --color-terracotta: #B5651D;
+  --color-text-primary: #2C2C2A;
+  --color-text-muted: #7a8a72;
+}
