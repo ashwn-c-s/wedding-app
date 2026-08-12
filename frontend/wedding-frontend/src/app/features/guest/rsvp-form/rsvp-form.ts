@@ -1,8 +1,9 @@
 import { Component } from '@angular/core';
+import { Nav } from '../../../shared/nav/nav';
 
 @Component({
   selector: 'app-rsvp-form',
-  imports: [],
+  imports: [Nav],
   templateUrl: './rsvp-form.html',
   styleUrl: './rsvp-form.scss',
 })

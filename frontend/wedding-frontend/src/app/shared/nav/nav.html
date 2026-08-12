@@ -1,0 +1,32 @@
+<nav class="sticky top-0 z-50 bg-cream border-b border-forest/15">
+  <div class="max-w-6xl mx-auto px-6 lg:px-12 py-4 flex items-center justify-between">
+
+    <!-- Desktop links -->
+    <div class="hidden lg:flex gap-8">
+      <a [routerLink]="['/invite', token]" routerLinkActive="text-terracotta" [routerLinkActiveOptions]="{exact: true}" class="text-sm tracking-wide text-forest hover:text-terracotta transition-colors">Home</a>
+      <a [routerLink]="['/invite', token, 'rsvp']" routerLinkActive="text-terracotta" class="text-sm tracking-wide text-forest hover:text-terracotta transition-colors">RSVP</a>
+      <a [routerLink]="['/invite', token, 'venues']" routerLinkActive="text-terracotta" class="text-sm tracking-wide text-forest hover:text-terracotta transition-colors">Venues</a>
+      <a [routerLink]="['/invite', token, 'gallery']" routerLinkActive="text-terracotta" class="text-sm tracking-wide text-forest hover:text-terracotta transition-colors">Gallery</a>
+      <a href="#our-story" class="text-sm tracking-wide text-forest hover:text-terracotta transition-colors">Our Story</a>
+    </div>
+
+    <!-- Hamburger (mobile only) -->
+    <button (click)="toggleMenu()" class="lg:hidden text-forest">
+      <span class="material-icons text-2xl">
+        {{ mobileMenuOpen() ? 'close' : 'menu' }}
+      </span>
+    </button>
+
+  </div>
+
+  <!-- Mobile overlay menu -->
+  @if (mobileMenuOpen()) {
+    <div class="lg:hidden flex flex-col items-center gap-6 py-8 bg-cream border-t border-forest/15">
+      <a [routerLink]="['/invite', token]" (click)="closeMenu()" class="text-base text-forest">Home</a>
+      <a [routerLink]="['/invite', token, 'rsvp']" (click)="closeMenu()" class="text-base text-forest">RSVP</a>
+      <a [routerLink]="['/invite', token, 'venues']" (click)="closeMenu()" class="text-base text-forest">Venues</a>
+      <a [routerLink]="['/invite', token, 'gallery']" (click)="closeMenu()" class="text-base text-forest">Gallery</a>
+      <a href="#our-story" (click)="closeMenu()" class="text-base text-forest">Our Story</a>
+    </div>
+  }
+</nav>

@@ -6,10 +6,11 @@ import { map, catchError, EMPTY } from 'rxjs';
 import { ApiService } from '../../../core/services/api.service';
 import { CountdownTimer } from '../../../shared/countdown-timer/countdown-timer';
 import { RouterLink } from '@angular/router';
+import { Nav } from '../../../shared/nav/nav';
 
 @Component({
   selector: 'app-landing',
-  imports: [CountdownTimer, RouterLink, DatePipe],
+  imports: [CountdownTimer, RouterLink, DatePipe, Nav],
   templateUrl: './landing.html',
   styleUrl: './landing.scss',
 })

@@ -1,6 +1,6 @@
 @if (invite()) {
-<div class="min-h-screen bg-cream font-sans pb-28">
-
+<div class="min-h-screen bg-cream font-sans">
+  <app-nav />
   <!-- Hero section -->
   <section class="relative px-6 md:px-12 lg:px-20 pt-12 lg:pt-20 pb-16 overflow-hidden">
     <div class="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-center">
@@ -80,26 +80,6 @@
     </section>
 
   </section>
-  <!-- Sticky bottom nav -->
-  <nav
-    class="fixed bottom-6 left-1/2 -translate-x-1/2 bg-cream border border-forest/20 rounded-full shadow-lg px-6 lg:px-10 py-3 flex gap-8 lg:gap-10 z-50">
-    <a [routerLink]="['/invite', token]" class="flex flex-col items-center gap-1 text-terracotta">
-      <span class="material-icons text-xl">home</span>
-      <span class="text-[10px] uppercase tracking-wide">Home</span>
-    </a>
-    <a [routerLink]="['/invite', token, 'rsvp']" class="flex flex-col items-center gap-1 text-text-muted">
-      <span class="material-icons text-xl">check_circle_outline</span>
-      <span class="text-[10px] uppercase tracking-wide">RSVP</span>
-    </a>
-    <a [routerLink]="['/invite', token, 'venues']" class="flex flex-col items-center gap-1 text-text-muted">
-      <span class="material-icons text-xl">place</span>
-      <span class="text-[10px] uppercase tracking-wide">Venues</span>
-    </a>
-    <a [routerLink]="['/invite', token, 'gallery']" class="flex flex-col items-center gap-1 text-text-muted">
-      <span class="material-icons text-xl">photo_library</span>
-      <span class="text-[10px] uppercase tracking-wide">Gallery</span>
-    </a>
-  </nav>
 </div>
 } @else {
 <div class="min-h-screen flex items-center justify-center">
