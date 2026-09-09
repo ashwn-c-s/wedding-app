@@ -8,9 +8,10 @@ import { CountdownTimer } from '../../../shared/countdown-timer/countdown-timer'
 import { RouterLink } from '@angular/router';
 import { Nav } from '../../../shared/nav/nav';
 
+import { NgOptimizedImage } from '@angular/common';
 @Component({
   selector: 'app-landing',
-  imports: [CountdownTimer, RouterLink, DatePipe, Nav],
+  imports: [CountdownTimer, RouterLink, DatePipe, Nav, NgOptimizedImage],
   templateUrl: './landing.html',
   styleUrl: './landing.scss',
 })
