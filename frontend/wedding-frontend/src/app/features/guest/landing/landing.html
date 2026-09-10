@@ -5,26 +5,36 @@
     <div class="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-12 items-center w-full h-full relative">
 
       <!-- Text content (Spans 5 columns on desktop) -->
-      <div class="text-center lg:text-left order-2 lg:order-1 lg:col-span-7 flex flex-col justify-center py-8 lg:py-12 z-10">
-        <h1 class="font-script text-6xl lg:text-7xl lg:text-8xl text-forest mb-3 tracking-wide leading-tight">
+      <div class="text-center lg:text-left order-2 lg:order-1 lg:col-span-7 flex flex-col justify-center py-6 lg:py-12 z-10">
+        <h1 class="font-script text-6xl lg:text-7xl xl:text-8xl text-forest mb-3 tracking-wide leading-tight">
           Ashwin <span class="inline-block"><span class="text-terracotta px-2">&</span> Amritha</span>
         </h1>
         
+        <!-- Subtle Designer Separator Line -->
         <div class="w-16 h-px bg-terracotta/40 my-4 mx-auto lg:mx-0"></div>
 
-        <p class="text-xs lg:text-sm tracking-[0.2em] uppercase text-forest/80 font-medium mb-8">
-          Together with their families
+        <p class="text-[10px] lg:text-sm tracking-[0.25em] uppercase text-forest/70 font-semibold mb-8">
+          Wedding Invitation
         </p>
 
-        <!-- Welcome banner -->
-        @if (invite()) {
-        <div class="inline-block max-w-md mx-auto lg:mx-0">
-          <h2 class="text-2xl lg:text-3xl text-text-primary mb-3 font-light tracking-wide">
-            Welcome, <span class="font-semibold text-forest">{{ invite()!.guest.name }}</span>
-          </h2>
-          <p class="text-sm lg:text-base text-text-muted leading-relaxed font-light">
-            With the joyful blessings of our families, we warmly invite you to share in our happiness as we unite in holy matrimony.
+        <!-- Personalized Invitation Content Card -->
+        @if (invite()) {  
+        <div class="inline-block max-w-md mx-auto lg:mx-0 space-y-4">
+          
+          <p class="text-sm lg:text-base text-text-muted leading-relaxed font-light tracking-wide text-justify">
+            As we bring our two worlds together — our joy would be incomplete without you, <span class="font-semibold text-forest text-base lg:text-lg">{{ invite()!.guest.name }}</span>. Along with our families, we warmly invite you to join us as we celebrate our marriage and a new beginning.
           </p>
+
+
+          <!-- Venue Metadata Block -->
+          <div class="pt-6 mt-2 border-t border-forest/10 flex flex-col gap-1.5 text-center lg:text-left">
+            <p class="text-base lg:text-lg font-medium text-terracotta tracking-wide">
+              Sunday, 15 November 2026
+            </p>
+            <p class="text-xs lg:text-sm text-forest/70 tracking-widest uppercase font-medium">
+              Ottapalam &middot; Thrissur
+            </p>
+          </div>
         </div>
         }
       </div>
@@ -45,47 +55,13 @@
     </div>
   </section>
 
-
-
-  <!-- Our Story -->
-  <section id="our-story" class="bg-white px-6 md:px-12 lg:px-20 py-16">
-    <div class="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-center">
-
-      <!-- Photo placeholder, same circular-frame pattern as the original hero placeholder -->
-      <div class="flex justify-center">
-        <div class="w-64 h-64 lg:w-80 lg:h-80 rounded-full bg-forest/10 border-2 border-forest overflow-hidden">
-          <img src="/images/our-story-photo.png" alt="Ashwin and Amritha" class="w-full h-full object-cover" />
-        </div>
-      </div>
-
-      <!-- Text -->
-      <div class="text-center lg:text-left">
-        <h2 class="font-heading text-3xl lg:text-4xl text-forest mb-4">Our Story</h2>
-        <p class="text-sm text-text-muted leading-relaxed mb-4">
-          From college days in Kochi to a lifetime of love — this is where we'll share how it all began. Placeholder for
-          now, the real story is coming soon. Lorem ipsum dolor sit amet, consectetur adipisicing elit. Magni sequi esse
-          ut aspernatur animi illum minima voluptatum, est quo enim porro itaque odit facilis ipsum magnam amet quam
-          quia nisi. Lorem ipsum, dolor sit amet consectetur adipisicing elit. Cum assumenda atque ut reiciendis itaque
-          repellendus ad quae tempora recusandae voluptate porro et, explicabo beatae at dolorum! Quae aspernatur beatae
-          maiores!
-        </p>
-        <img class="h-16 -m-3" src="/images/wedding_loader.svg" alt="ring">
-      </div>
-
-    </div>
-  </section>
-
   <!-- Countdown ribbon -->
-  <section class="bg-white px-6 md:px-12 py-14">
-    <p class="text-xs tracking-widest uppercase text-forest mb-6 text-center">
-      Counting down to the big day
-    </p>
-    <div class="flex items-center justify-center gap-6 md:gap-12 max-w-4xl mx-auto">
-      <img src="/images/peacock-motif.png" alt=""
-        class="hidden sm:block w-16 md:w-24 h-auto opacity-90 flex-shrink-0" />
-      <app-countdown-timer />
-      <img src="/images/nilavilakku-lamp.png" alt=""
-        class="hidden sm:block w-16 md:w-24 h-auto opacity-90 flex-shrink-0" />
+  <section class="relative px-6 md:px-12 py-16 bg-linear-to-b from-cream via-white/40 to-white/90">
+      <p class="text-xs lg:text-sm tracking-[0.25em] uppercase text-forest font-semibold mb-6 text-center">
+        Counting down to the big day
+      </p>
+        <div class="flex items-center justify-center mx-auto grow max-w-lg">
+          <app-countdown-timer />
     </div>
   </section>
 
