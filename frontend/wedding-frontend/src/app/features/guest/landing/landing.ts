@@ -6,12 +6,13 @@ import { map, catchError, EMPTY } from 'rxjs';
 import { ApiService } from '../../../core/services/api.service';
 import { CountdownTimer } from '../../../shared/countdown-timer/countdown-timer';
 import { RouterLink } from '@angular/router';
+import { Footer } from '../../../shared/footer/footer';
 import { Nav } from '../../../shared/nav/nav';
 
 import { NgOptimizedImage } from '@angular/common';
 @Component({
   selector: 'app-landing',
-  imports: [CountdownTimer, RouterLink, DatePipe, Nav, NgOptimizedImage],
+  imports: [CountdownTimer, RouterLink, DatePipe, Nav, Footer, NgOptimizedImage],
   templateUrl: './landing.html',
   styleUrl: './landing.scss',
 })
