@@ -1,0 +1,8 @@
+<main class="admin-page"><app-admin-nav/><h1>Event administration</h1>
+@if(error()){<p class="error" role="alert">{{error()}}</p>}@if(notice()){<p class="success" role="status">{{notice()}}</p>}
+@if(loading()){<p role="status">Loading events…</p>}@else{
+<label>Choose an event<select [ngModel]="selectedId" (ngModelChange)="select($event)" [disabled]="saving()"><option value="">Select an event</option>@for(event of events();track event.id){<option [value]="event.id">{{event.name}}</option>}</select></label>
+@if(events().length===0){<p>No events available.</p>}
+@if(draft;as event){<form class="panel" (ngSubmit)="save()"><fieldset [disabled]="saving()" style="border:0;padding:0"><div class="fields"><label>Event name<input name="name" [(ngModel)]="event.name" required maxlength="200"></label><label>Date & time (Asia/Kolkata, UTC+05:30)<input name="date" type="datetime-local" step="1" [(ngModel)]="dateInput" required></label><label>Time label<input name="time" [(ngModel)]="event.time_label" maxlength="200"></label><label>Venue name<input name="venue" [(ngModel)]="event.venue_name" maxlength="300"></label></div>
+<label>Venue address<textarea name="address" [(ngModel)]="event.venue_address" rows="2" maxlength="2000"></textarea></label><label>Maps link<input type="url" name="maps" [(ngModel)]="event.maps_url"></label><label>Directions<textarea name="directions" [(ngModel)]="event.directions_text" rows="3" maxlength="5000"></textarea></label><label><input type="checkbox" name="visible" [(ngModel)]="event.is_visible"> Visible to invited guests</label><button type="submit">{{saving() ? 'Saving…' : 'Save event'}}</button></fieldset></form>}}
+</main>

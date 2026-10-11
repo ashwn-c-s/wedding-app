@@ -4,9 +4,10 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "nodemon",
-    "build": "tsc"
+    "test": "npm run build && node --test test/*.test.cjs",
+    "dev": "node --watch --require ts-node/register src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js"
   },
   "keywords": [],
   "author": "",
@@ -15,16 +16,16 @@
     "@supabase/supabase-js": "^2.110.0",
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",
-    "express": "^5.2.1",
-    "multer": "^2.2.0"
+    "express": "^5.2.1"
   },
   "devDependencies": {
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
-    "@types/multer": "^2.2.0",
     "@types/node": "^26.1.0",
-    "nodemon": "^3.1.14",
     "ts-node": "^10.9.2",
     "typescript": "^6.0.3"
+  },
+  "engines": {
+    "node": ">=22"
   }
 }

@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, Input } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 
 @Component({
@@ -9,5 +9,5 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
 })
 export class Footer {
   private route = inject(ActivatedRoute);
-  token = this.route.snapshot.params['token'];
+  @Input() token: string | null = this.route.snapshot.params['token'] || null;
 }

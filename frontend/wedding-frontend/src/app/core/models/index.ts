@@ -8,7 +8,7 @@ export interface Event {
   venue_address: string | null;
   maps_url: string | null;
   directions_text: string | null;
-  is_visible: boolean;
+  is_visible?: boolean;
 }
 
 export interface Guest {

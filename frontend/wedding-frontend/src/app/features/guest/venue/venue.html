@@ -1,3 +1,25 @@
-<div>
-    <app-nav />
+<div class="min-h-screen bg-cream font-sans">
+  <app-nav [token]="token" />
+  <main class="max-w-4xl mx-auto px-6 py-16 text-forest">
+    <h1 class="font-script text-5xl text-center mb-12">Our venues</h1>
+    @if (loading()) { <p role="status" class="text-center">Loading venue details…</p> }
+    @else if (error()) { <div role="alert" class="text-center"><p>{{ error() }}</p><button type="button" (click)="load()" class="mt-4 underline">Try again</button></div> }
+    @else {
+      <div class="grid md:grid-cols-2 gap-8">
+        @for (event of events(); track event.id) {
+          <article class="bg-white rounded-2xl p-8 shadow-lg shadow-forest/5">
+            <h2 class="font-heading text-xl font-bold mb-3">{{ event.name }}</h2>
+            <p class="text-text-muted mb-6">{{ event.date | date:'EEEE, MMM d, y':'+0530' }} · {{ event.time_label }}</p>
+            <h3 class="font-semibold mb-2">{{ event.venue_name || 'Venue to be announced' }}</h3>
+            @if (event.venue_address) { <p class="text-text-muted mb-4 whitespace-pre-line">{{ event.venue_address }}</p> }
+            @if (event.directions_text) { <p class="text-text-muted mb-6 whitespace-pre-line">{{ event.directions_text }}</p> }
+            @if (getDirectionsUrl(event)) {
+              <a [href]="getDirectionsUrl(event)" target="_blank" rel="noopener noreferrer" class="inline-block bg-forest text-white rounded-full px-6 py-3 text-sm">Get directions</a>
+            }
+          </article>
+        } @empty { <p class="text-center md:col-span-2">Venue details will be shared soon.</p> }
+      </div>
+    }
+  </main>
+  <app-footer [token]="token" />
 </div>

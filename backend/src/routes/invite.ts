@@ -1,136 +1,42 @@
-import { Router, Response } from 'express';
+import { Router } from 'express';
 import { supabase } from '../lib/supabase';
 import { validateToken, GuestRequest } from '../middleware/validateToken';
-
+import { EventRecord, validateResponses } from '../lib/validation';
 const router = Router();
-
-router.get('/:token', validateToken, async (req: GuestRequest, res: Response) => {
-    const guest = req.guest!;
-
-    const { data: events, error } = await supabase
-        .from('guest_events')
-        .select(`
-      event:events (
-        id,
-        slug,
-        name,
-        date,
-        time_label,
-        venue_name,
-        is_visible
-      )
-    `)
-        .eq('guest_id', guest.id)
-        .eq('events.is_visible', true);
-
-    if (error) {
-        res.status(500).json({ error: 'Failed to fetch events' });
-        return;
-    }
-
-    res.json({
-        guest: {
-            id: guest.id,
-            name: guest.name,
-            party_size: guest.party_size
-        },
-        events: events
-            .map((e: any) => e.event)
-            .filter(Boolean)
-    });
+const fields = 'id,slug,name,date,time_label,venue_name,venue_address,maps_url,directions_text,is_visible';
+export async function permittedEvents(guestId:string):Promise<EventRecord[]> {
+  const {data,error} = await supabase.from('guest_events').select(`event:events!inner(${fields})`).eq('guest_id',guestId).eq('event.is_visible',true);
+  if (error) throw new Error('Failed to fetch events');
+  return (data ?? []).flatMap(row => (Array.isArray(row.event) ? row.event : [row.event])).filter(Boolean);
+}
+router.get('/defaultevents',async (_req,res) => {
+  const {data,error} = await supabase.from('events').select(fields).eq('is_visible',true).order('date');
+  if (error) { res.status(503).json({error:'Failed to fetch events'}); return; }
+  res.json({venues:data ?? []});
 });
-
-router.get('/:token/rsvp-status', validateToken, async (req: GuestRequest, res: Response) => {
-    const guest = req.guest!;
-
-    const { data: rsvps, error } = await supabase
-        .from('rsvps')
-        .select('*')
-        .eq('guest_id', guest.id);
-
-    if (error) {
-        res.status(500).json({ error: 'Failed to fetch RSVP status' });
-        return;
-    }
-
-    res.json({
-        submitted: rsvps.length > 0,
-        responses: rsvps.map((r: any) => ({
-            event_id: r.event_id,
-            attending: r.attending
-        }))
-    });
+router.get('/:token',validateToken,async (req:GuestRequest,res) => {
+  const guest = req.guest!;
+  res.json({guest:{id:guest.id,name:guest.name,party_size:guest.party_size},events:await permittedEvents(guest.id)});
 });
-
-router.post('/:token/rsvp', validateToken, async (req: GuestRequest, res: Response) => {
-    const guest = req.guest!;
-
-    // check if already submitted
-    const { data: existing } = await supabase
-        .from('rsvps')
-        .select('id')
-        .eq('guest_id', guest.id);
-
-    if (existing && existing.length > 0) {
-        res.status(409).json({ error: 'RSVP already submitted' });
-        return;
-    }
-
-    const { responses } = req.body as {
-        responses: { event_id: string; attending: boolean }[];
-    };
-
-    if (!responses || responses.length === 0) {
-        res.status(400).json({ error: 'No responses provided' });
-        return;
-    }
-
-    const rows = responses.map((r) => ({
-        guest_id: guest.id,
-        event_id: r.event_id,
-        attending: r.attending
-    }));
-
-    const { error } = await supabase.from('rsvps').insert(rows);
-
-    if (error) {
-        res.status(500).json({ error: 'Failed to submit RSVP' });
-        return;
-    }
-
-    res.json({ success: true });
+router.get('/:token/rsvp-status',validateToken,async (req:GuestRequest,res) => {
+  const {data,error} = await supabase.from('rsvps').select('event_id,attending').eq('guest_id',req.guest!.id);
+  if (error) { res.status(503).json({error:'Failed to fetch RSVP status'}); return; }
+  res.json({submitted:!!data?.length,responses:data ?? []});
 });
-
-router.get('/:token/venues', validateToken, async (req: GuestRequest, res: Response) => {
-    const guest = req.guest!;
-
-    const { data: events, error } = await supabase
-        .from('guest_events')
-        .select(`
-      event:events (
-        id,
-        name,
-        date,
-        time_label,
-        venue_name,
-        venue_address,
-        maps_url,
-        directions_text
-      )
-    `)
-        .eq('guest_id', guest.id)
-        .eq('events.is_visible', true);
-
-    if (error) {
-        res.status(500).json({ error: 'Failed to fetch venues' });
-        return;
-    }
-
-    res.json({
-        venues: events
-            .map((e: any) => e.event)
-            .filter(Boolean)
-    });
+router.post('/:token/rsvp',validateToken,async (req:GuestRequest,res) => {
+  const guest = req.guest!;
+  const {data:existing,error:readError} = await supabase.from('rsvps').select('id').eq('guest_id',guest.id).limit(1);
+  if (readError) { res.status(503).json({error:'Unable to verify RSVP status'}); return; }
+  if (existing?.length) { res.status(409).json({error:'RSVP already submitted'}); return; }
+  const events = await permittedEvents(guest.id);
+  let responses;
+  try { responses = validateResponses(req.body,events.map(event=>event.id)); }
+  catch (error) { res.status(400).json({error:(error as Error).message}); return; }
+  // A single INSERT is atomic. Concurrent requests contain the same complete event set;
+  // the existing unique guest/event constraint rejects the second insert entirely.
+  const {error} = await supabase.from('rsvps').insert(responses.map(response=>({...response,guest_id:guest.id})));
+  if (error) { res.status(error.code === '23505' ? 409 : 503).json({error:error.code === '23505' ? 'RSVP already submitted' : 'Failed to submit RSVP'}); return; }
+  res.json({success:true});
 });
-
+router.get('/:token/venues',validateToken,async (req:GuestRequest,res)=>{res.json({venues:await permittedEvents(req.guest!.id)});});
 export default router;

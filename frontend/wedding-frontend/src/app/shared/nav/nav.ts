@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, inject, signal, Input } from '@angular/core';
 import { ActivatedRoute, RouterLink, RouterLinkActive } from '@angular/router';
 
 @Component({
@@ -11,7 +11,7 @@ import { ActivatedRoute, RouterLink, RouterLinkActive } from '@angular/router';
 export class Nav {
   private route = inject(ActivatedRoute);
 
-  token = this.route.snapshot.params['token'];
+  @Input() token: string | null = this.route.snapshot.params['token'] || null;
   mobileMenuOpen = signal(false);
 
   toggleMenu() {
