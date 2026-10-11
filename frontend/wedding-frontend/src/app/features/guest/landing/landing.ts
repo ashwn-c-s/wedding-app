@@ -10,6 +10,7 @@ import { Footer } from '../../../shared/footer/footer';
 import { Nav } from '../../../shared/nav/nav';
 import { Event, GuestInvite } from '../../../core/models';
 import { directionsUrl, isValidInviteToken } from '../event-links';
+import { eventImage } from '../event-images';
 
 @Component({
   selector: 'app-landing',
@@ -55,6 +56,7 @@ export class Landing {
   }
 
   getDirectionsUrl = directionsUrl;
+  getEventImage = eventImage;
 
   getCalendarUrl(event: Event): string {
     const start = new Date(event.date);
