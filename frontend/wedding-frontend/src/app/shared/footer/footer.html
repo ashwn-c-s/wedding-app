@@ -4,6 +4,7 @@
       <a [routerLink]="token ? ['/invite', token] : ['/']">Home</a>
       @if (token) { <a [routerLink]="['/invite', token, 'rsvp']">RSVP</a> }
       <a [routerLink]="token ? ['/invite', token, 'venues'] : ['/venues']">Venues</a>
+      <a [routerLink]="token ? ['/invite', token, 'about'] : ['/about']">About us</a>
     </div>
     @if (token) {
       <a [routerLink]="['/invite', token, 'rsvp']" class="border-2 border-gold rounded-full px-8 py-3 text-sm font-medium tracking-wide uppercase text-terracotta hover:bg-terracotta hover:text-cream transition-colors">RSVP Now</a>

@@ -1,0 +1,45 @@
+<div class="min-h-screen bg-cream font-sans flex flex-col">
+  <app-nav [token]="token()" />
+  <main class="w-full max-w-4xl mx-auto px-6 md:px-12 py-16 md:py-20 flex-1 text-forest">
+    <header class="text-center max-w-xl mx-auto mb-10 md:mb-14">
+      <p class="text-xs tracking-[0.2em] uppercase text-terracotta font-semibold mb-4">Two families, one celebration</p>
+      <h1 class="font-script text-6xl md:text-7xl mb-6">About us</h1>
+      <p class="text-text-muted leading-relaxed">We’re Ashwin and Amritha. Together with our families, we’re looking forward to celebrating our wedding with you.</p>
+    </header>
+
+    <div class="grid md:grid-cols-2 gap-6 md:gap-8">
+      <article class="bg-white rounded-2xl p-8 md:p-10 shadow-lg shadow-forest/5 border border-gold/20">
+        <p class="text-xs tracking-[0.2em] uppercase text-terracotta mb-4">The groom</p>
+        <h2 class="font-heading text-3xl mb-6">Ashwin C S</h2>
+        <dl class="space-y-6">
+          <div>
+            <dt class="text-xs tracking-widest uppercase text-text-muted mb-2">Family</dt>
+            <dd class="leading-relaxed">Son of Mrs. Thulasi P N<br />and Mr. Suresh C S</dd>
+          </div>
+          <div>
+            <dt class="text-xs tracking-widest uppercase text-text-muted mb-2">Hometown</dt>
+            <dd class="leading-relaxed">Andaparambu, Thrissur</dd>
+          </div>
+        </dl>
+      </article>
+
+      <article class="bg-white rounded-2xl p-8 md:p-10 shadow-lg shadow-forest/5 border border-gold/20">
+        <p class="text-xs tracking-[0.2em] uppercase text-terracotta mb-4">The bride</p>
+        <h2 class="font-heading text-3xl mb-6">Amritha P M</h2>
+        <dl class="space-y-6">
+          <div>
+            <dt class="text-xs tracking-widest uppercase text-text-muted mb-2">Family</dt>
+            <dd class="leading-relaxed">Daughter of Mrs. Sunitha<br />and Mr. P S Madhu</dd>
+          </div>
+          <div>
+            <dt class="text-xs tracking-widest uppercase text-text-muted mb-2">Hometown</dt>
+            <dd class="leading-relaxed">East Manissery, Ottapalam, Palakkad</dd>
+          </div>
+        </dl>
+      </article>
+    </div>
+
+    <p class="text-center text-text-muted leading-relaxed mt-10">Your presence and blessings mean so much to us and our families.</p>
+  </main>
+  <app-footer [token]="token()" />
+</div>
