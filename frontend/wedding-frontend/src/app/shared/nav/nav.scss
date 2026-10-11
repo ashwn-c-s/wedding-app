@@ -1,0 +1,11 @@
+:host { display: block; position: sticky; top: 0; z-index: 50; }
+nav { border-bottom: 1px solid #1e462010; }
+.nav-monogram { font-size: 30px; color: #1e4620; text-decoration: none; }
+.nav-monogram span { color: #9e4b28; }
+nav a, button { min-height: 48px; display: inline-flex; align-items: center; }
+button { width: 48px; justify-content: center; border-radius: 8px; }
+a:focus-visible, button:focus-visible { outline: 3px solid #9e4b28; outline-offset: 3px; }
+.mobile-navigation { position: absolute; top: 100%; left: 0; right: 0; padding: 8px 20px 16px; box-shadow: 0 12px 20px #1e462012; max-height: calc(100dvh - 56px); overflow-y: auto; }
+.mobile-navigation a { display: flex; padding: 8px 16px; border-radius: 8px; }
+.mobile-navigation a:hover { background: #1e462008; }
+@media (min-width: 768px) { button, .mobile-navigation { display: none; } }

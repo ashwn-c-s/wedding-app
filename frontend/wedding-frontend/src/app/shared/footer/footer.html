@@ -1,15 +1,13 @@
-<footer class="relative bg-cream border-t border-forest/15 px-6 md:px-12 py-2 overflow-hidden">
+<footer class="relative bg-cream border-t border-forest/15 px-6 md:px-12 py-4 overflow-hidden">
   <div class="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
-    <div class="flex flex-wrap justify-center gap-6 text-sm text-forest">
+    <nav aria-label="Footer navigation" class="flex flex-wrap justify-center gap-x-4 text-sm text-forest">
       <a [routerLink]="token ? ['/invite', token] : ['/']">Home</a>
       @if (token) { <a [routerLink]="['/invite', token, 'rsvp']">RSVP</a> }
       <a [routerLink]="token ? ['/invite', token, 'venues'] : ['/venues']">Venues</a>
       <a [routerLink]="token ? ['/invite', token, 'about'] : ['/about']">About us</a>
       <a [routerLink]="token ? ['/invite', token, 'gallery'] : ['/gallery']">Gallery</a>
-    </div>
-    @if (token) {
-      <a [routerLink]="['/invite', token, 'rsvp']" class="border-2 border-gold rounded-full px-8 py-3 text-sm font-medium tracking-wide uppercase text-terracotta hover:bg-terracotta hover:text-cream transition-colors">RSVP Now</a>
-    }
+    </nav>
+
   </div>
-  <img src="/images/footer-mural-border.png" alt="" class="hidden lg:block absolute right-0 bottom-0 h-24 w-auto opacity-80 pointer-events-none" />
+  <p class="blessings-note">Your blessings are our only presents</p>
 </footer>

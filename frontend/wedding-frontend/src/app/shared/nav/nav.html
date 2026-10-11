@@ -1,5 +1,6 @@
-<nav class="sticky top-0 z-50 bg-cream ">
-  <div class="max-w-6xl mx-auto px-6 md:px-12 py-4 flex items-center justify-end">
+<nav class="bg-cream" aria-label="Main navigation" (keydown.escape)="closeMenu()">
+  <div class="max-w-6xl mx-auto px-6 md:px-12 py-1 flex items-center justify-between">
+    <a class="nav-monogram font-script" [routerLink]="token ? ['/invite', token] : ['/']" aria-label="Ashwin and Amritha home">A <span>&amp;</span> A</a>
     <!-- Desktop links -->
     <div class="hidden md:flex gap-8">
       <a [routerLink]="token ? ['/invite', token] : ['/']" routerLinkActive="text-terracotta" [routerLinkActiveOptions]="{exact: true}" class="text-sm tracking-wide text-forest hover:text-terracotta transition-colors">Home</a>
@@ -12,8 +13,8 @@
     </div>
 
     <!-- Hamburger (mobile only) -->
-    <button type="button" aria-label="Toggle navigation" [attr.aria-expanded]="mobileMenuOpen()" (click)="toggleMenu()" class="md:hidden text-forest">
-      <span class="material-icons text-2xl">
+    <button type="button" aria-label="Toggle navigation" [attr.aria-controls]="mobileMenuOpen() ? 'mobile-navigation' : null" [attr.aria-expanded]="mobileMenuOpen()" (click)="toggleMenu()" class="md:hidden text-forest">
+      <span class="material-icons text-2xl" aria-hidden="true">
         {{ mobileMenuOpen() ? 'close' : 'menu' }}
       </span>
     </button>
@@ -22,7 +23,7 @@
 
   <!-- Mobile overlay menu -->
   @if (mobileMenuOpen()) {
-    <div class="md:hidden flex flex-col items-center gap-6 py-8 bg-cream border-t border-forest/15">
+    <div id="mobile-navigation" class="mobile-navigation md:hidden bg-cream border-t border-forest/15">
       <a [routerLink]="token ? ['/invite', token] : ['/']" (click)="closeMenu()" class="text-base text-forest">Home</a>
       @if (token) {
       <a [routerLink]="['/invite', token, 'rsvp']" (click)="closeMenu()" class="text-base text-forest">RSVP</a>

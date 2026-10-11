@@ -1,6 +1,6 @@
 import { Component, DestroyRef, inject, signal } from '@angular/core';
 import { DatePipe, NgOptimizedImage } from '@angular/common';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { catchError, map, throwError } from 'rxjs';
 import { Subscription } from 'rxjs';
@@ -14,7 +14,7 @@ import { eventImage } from '../event-images';
 
 @Component({
   selector: 'app-landing',
-  imports: [CountdownTimer, DatePipe, Nav, Footer, NgOptimizedImage],
+  imports: [CountdownTimer, DatePipe, Nav, Footer, NgOptimizedImage, RouterLink],
   templateUrl: './landing.html',
   styleUrl: './landing.scss',
 })

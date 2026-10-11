@@ -1,12 +1,12 @@
-<div class="flex gap-6 justify-center my-4">
-  @for (unit of units; track unit.label) {
-    <div class="flex flex-col items-center">
-      <span class="text-4xl font-light text-forest">
-        {{ unit.value.toString().padStart(2, '0') }}
-      </span>
-      <span class="text-xs text-text-muted uppercase tracking-widest mt-1.5">
-        {{ unit.label }}
-      </span>
-    </div>
-  }
-</div>
+@if (timeLeft().days || timeLeft().hours || timeLeft().minutes || timeLeft().seconds) {
+  <div class="countdown" aria-label="Time until our wedding day">
+    @for (unit of units; track unit.label) {
+      <div class="countdown-unit">
+        <span class="countdown-value">{{ unit.value.toString().padStart(2, '0') }}</span>
+        <span class="countdown-label">{{ unit.label }}</span>
+      </div>
+    }
+  </div>
+} @else {
+  <p class="celebration-message">{{ celebrationMessage() }}</p>
+}

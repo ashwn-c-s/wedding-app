@@ -16,12 +16,13 @@ describe('Landing invitation loading', () => {
   it('renders the authorized guest and events', async () => {
     api.getInvite.mockReturnValue(of(guestInvite)); const fixture = await setup('11111111-1111-4111-8111-111111111111');
     expect(fixture.nativeElement.textContent).toContain('A Guest'); expect(fixture.componentInstance.events()).toEqual([weddingEvent]); expect(api.getDefaultEvents).not.toHaveBeenCalled();
+    expect(fixture.nativeElement.querySelector('#invitation-details .hero-actions a').getAttribute('href')).toBe('/invite/11111111-1111-4111-8111-111111111111/rsvp'); expect(fixture.nativeElement.querySelector('.hero-section .guest-greeting').textContent).toContain('A Guest');
   });
   it('uses the actual default-events response for an invalid invitation without guest data', async () => {
     api.getInvite.mockReturnValue(throwError(() => ({status: 404}))); const fixture = await setup('22222222-2222-4222-8222-222222222222');
     expect(api.getDefaultEvents).toHaveBeenCalledOnce(); expect(fixture.componentInstance.invite()).toBeNull(); expect(fixture.nativeElement.textContent).toContain('Wedding Hall'); expect(fixture.nativeElement.textContent).not.toContain('RSVP');
   });
-  it('loads default events for a missing token', async () => { const fixture = await setup(); expect(api.getInvite).not.toHaveBeenCalled(); expect(fixture.componentInstance.events()).toEqual([weddingEvent]); });
+  it('loads default events for a missing token', async () => { const fixture = await setup(); expect(api.getInvite).not.toHaveBeenCalled(); expect(fixture.componentInstance.events()).toEqual([weddingEvent]); expect(fixture.nativeElement.querySelector('.scroll-arrow')).toBeNull(); expect(fixture.nativeElement.querySelector('.hero-section .action-primary')).toBeNull(); expect(fixture.nativeElement.textContent).not.toContain('RSVP'); });
   it('shows loading and allows retry after a network failure', async () => {
     const request = new Subject(); api.getInvite.mockReturnValue(request); const fixture = await setup('11111111-1111-4111-8111-111111111111');
     expect(fixture.nativeElement.textContent).toContain('Loading your invitation'); request.error({status: 0}); fixture.detectChanges(); expect(fixture.nativeElement.textContent).toContain('Try again');

@@ -14,8 +14,10 @@ interface TimeLeft {
   styleUrl: './countdown-timer.scss',
 })
 export class CountdownTimer implements OnInit, OnDestroy {
-  private weddingDate = new Date('2026-11-15T00:00:00');
+  private weddingDate = new Date('2026-11-15T00:00:00+05:30');
   private intervalId: ReturnType<typeof setInterval> | null = null;
+
+  celebrationMessage = signal('');
 
   timeLeft = signal<TimeLeft>({ days: 0, hours: 0, minutes: 0, seconds: 0 });
 
@@ -34,6 +36,11 @@ export class CountdownTimer implements OnInit, OnDestroy {
     const now = new Date().getTime();
     const target = this.weddingDate.getTime();
     const diff = target - now;
+    this.celebrationMessage.set(now < target
+      ? 'Our celebration is tomorrow'
+      : now < target + 24 * 60 * 60 * 1000
+        ? 'Today is our wedding day!'
+        : 'Thank you for celebrating with us');
 
     if (diff <= 0) {
       this.timeLeft.set({ days: 0, hours: 0, minutes: 0, seconds: 0 });
@@ -57,4 +64,5 @@ export class CountdownTimer implements OnInit, OnDestroy {
       { label: 'Seconds', value: t.seconds }
     ];
   }
+
 }
