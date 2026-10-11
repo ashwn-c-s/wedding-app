@@ -37,3 +37,18 @@ describe('Existing timestamp event editing',()=>{
     component.dateInput='2026-11-15T11:45';await component.save();expect(api.saveEvent.mock.calls[1][1].date).toBe('2026-11-15T11:45:00+05:30');
   });
 });
+
+describe('Event creation',()=>{
+  it('creates an event with a slug and converts its India time without assigning guests automatically',async()=>{
+    const api={events:vi.fn().mockReturnValue(of({events:[]})),createEvent:vi.fn().mockImplementation(event=>of({event:{...event,id:'new-event'}}))};TestBed.configureTestingModule({providers:[{provide:AdminService,useValue:api}]});const component=TestBed.runInInjectionContext(()=>new Events());await Promise.resolve();component.add();component.slug='family-dinner';component.draft!.name='Family dinner';component.dateInput='2026-11-14T18:00';await component.save();expect(api.createEvent.mock.calls[0][0]).toMatchObject({slug:'family-dinner',name:'Family dinner',date:'2026-11-14T18:00:00+05:30'});expect(component.events()).toHaveLength(1);expect(component.creating).toBe(false);expect(component.selectedId).toBe('new-event');expect(component.notice()).toContain('Assign it to guests');
+  });
+});
+
+import { provideRouter } from '@angular/router';
+import { signal } from '@angular/core';
+import { AdminAuthService } from '../../../core/services/admin-auth.service';
+describe('New event form rendering',()=>{
+  it('renders required creation fields with an India-time date input',async()=>{
+    const api={events:vi.fn().mockReturnValue(of({events:[]}))};await TestBed.configureTestingModule({imports:[Events],providers:[provideRouter([]),{provide:AdminService,useValue:api},{provide:AdminAuthService,useValue:{role:signal('full')}}]}).compileComponents();const fixture=TestBed.createComponent(Events);await fixture.componentInstance.load();fixture.componentInstance.add();fixture.detectChanges();await fixture.whenStable();fixture.detectChanges();expect(fixture.nativeElement.querySelector('input[name="slug"]').required).toBe(true);expect(fixture.nativeElement.querySelector('input[type="datetime-local"]')).not.toBeNull();expect(fixture.nativeElement.textContent).toContain('Asia/Kolkata');expect(fixture.nativeElement.textContent).toContain('Guests are assigned separately');
+  });
+});

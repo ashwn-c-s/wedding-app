@@ -91,3 +91,43 @@ test('guest import rejects existing assignment changes before writing',async()=>
   plans=[adminPlan('full'),{table:'events',result:ok([{id:eid,slug:'wedding'}])},{table:'guests',result:ok({id:'g',name:'Good',party_size:2})},{table:'rsvps',result:ok([])},{table:'guest_events',result:ok([{event_id:token}])}];
   const {data}=await request('/api/admin/guests/import','POST',{csv:'name,phone,party_size,events\nGood,123,2,wedding'},true);assert.equal(data.failed,1);assert.match(data.results[0].message,/assignments differ/);
 });
+
+test('restricted admins cannot create guests, edit guests or create events',async()=>{
+  for(const [path,method] of [['/api/admin/guests','POST'],[`/api/admin/guests/${token}`,'PATCH'],['/api/admin/events','POST']]){
+    plans=[adminPlan('restricted')];assert.equal((await request(path,method,{},true)).status,403);
+  }
+});
+test('guest creation validates fields and requires real assigned events before inserting',async()=>{
+  plans=[adminPlan('full')];assert.equal((await request('/api/admin/guests','POST',{name:'A',phone:'123',party_size:0,event_ids:[eid]},true)).status,400);
+  plans=[adminPlan('full'),{table:'events',result:ok([])}];assert.equal((await request('/api/admin/guests','POST',{name:'A',phone:'123',party_size:1,event_ids:[eid]},true)).status,400);
+  plans=[adminPlan('full'),{table:'events',result:ok([{id:eid}])},{table:'guests',result:calls=>{assert.deepEqual(calls.find(c=>c[0]==='insert')[1],{name:'A',phone:'123',party_size:2});return ok({...guest,id:token,name:'A'});}},{table:'guest_events',result:calls=>{assert.deepEqual(calls.find(c=>c[0]==='insert')[1],[{guest_id:token,event_id:eid}]);return ok(null);}}];
+  const result=await request('/api/admin/guests','POST',{name:' A ',phone:'123',party_size:2,event_ids:[eid]},true);assert.equal(result.status,201);assert.deepEqual(result.data.guest.event_ids,[eid]);
+});
+test('guest creation reports duplicate phones and partial assignment failure',async()=>{
+  plans=[adminPlan('full'),{table:'events',result:ok([{id:eid}])},{table:'guests',result:{error:{code:'23505'}}}];assert.equal((await request('/api/admin/guests','POST',{name:'A',phone:'123',party_size:1,event_ids:[eid]},true)).status,409);
+  plans=[adminPlan('full'),{table:'events',result:ok([{id:eid}])},{table:'guests',result:ok({...guest,id:token})},{table:'guest_events',result:{error:{code:'failure'}}}];
+  const result=await request('/api/admin/guests','POST',{name:'A',phone:'123',party_size:1,event_ids:[eid]},true);assert.equal(result.status,503);assert.equal(result.data.guest_id,token);assert.match(result.data.error,/Guest created/);
+});
+test('confirmed guest details can change without replacing their token or RSVP',async()=>{
+  plans=[adminPlan('full'),{table:'guests',result:ok({id:token,invite_token:eid})},{table:'guest_events',result:ok([{event_id:eid}])},{table:'rsvps',result:ok([{event_id:eid,attending:true}])},{table:'events',result:ok([{id:eid}])},{table:'guests',result:calls=>{assert.deepEqual(calls.find(c=>c[0]==='update')[1],{name:'Changed',phone:'456',party_size:3});return ok({...guest,id:token,invite_token:eid,name:'Changed'});}}];
+  const result=await request(`/api/admin/guests/${token}`,'PATCH',{name:'Changed',phone:'456',party_size:3,event_ids:[eid]},true);assert.equal(result.status,200);assert.equal(result.data.guest.invite_token,eid);assert.deepEqual(result.data.guest.responses,[{event_id:eid,attending:true}]);
+});
+test('confirmed guest event changes are rejected before any write',async()=>{
+  plans=[adminPlan('full'),{table:'guests',result:ok({id:token})},{table:'guest_events',result:ok([{event_id:eid}])},{table:'rsvps',result:ok([{event_id:eid,attending:true}])},{table:'events',result:ok([{id:token}])}];
+  assert.equal((await request(`/api/admin/guests/${token}`,'PATCH',{name:'A',phone:'123',party_size:1,event_ids:[token]},true)).status,409);
+});
+test('pending guest event update adds and removes only the selected guest assignments',async()=>{
+  plans=[adminPlan('full'),{table:'guests',result:ok({id:token})},{table:'guest_events',result:ok([{event_id:eid}])},{table:'rsvps',result:ok([])},{table:'events',result:ok([{id:token}])},{table:'guests',result:ok({...guest,id:token})},{table:'guest_events',result:calls=>{assert.deepEqual(calls.find(c=>c[0]==='upsert')[1],[{guest_id:token,event_id:token}]);return ok(null);}},{table:'guest_events',result:calls=>{assert.ok(calls.some(c=>c[0]==='eq'&&c[1]==='guest_id'&&c[2]===token));assert.deepEqual(calls.find(c=>c[0]==='in').slice(1),['event_id',[eid]]);return ok(null);}}];
+  assert.equal((await request(`/api/admin/guests/${token}`,'PATCH',{name:'A',phone:'123',party_size:1,event_ids:[token]},true)).status,200);
+});
+test('event creation requires fields, rejects duplicate slugs and returns created event',async()=>{
+  plans=[adminPlan('full')];assert.equal((await request('/api/admin/events','POST',{name:'Dinner'},true)).status,400);
+  const body={name:'Dinner',slug:'family-dinner',date:'2026-11-14T18:00:00+05:30',is_visible:false};
+  plans=[adminPlan('full'),{table:'events',result:ok({...body,id:eid})}];const result=await request('/api/admin/events','POST',body,true);assert.equal(result.status,201);assert.equal(result.data.event.slug,body.slug);
+  plans=[adminPlan('full'),{table:'events',result:{error:{code:'23505'}}}];assert.equal((await request('/api/admin/events','POST',body,true)).status,409);
+});
+
+test('guest edit reports partial removal failure without touching saved responses',async()=>{
+  plans=[adminPlan('full'),{table:'guests',result:ok({id:token})},{table:'guest_events',result:ok([{event_id:eid}])},{table:'rsvps',result:ok([])},{table:'events',result:ok([{id:token}])},{table:'guests',result:ok({...guest,id:token})},{table:'guest_events',result:ok(null)},{table:'guest_events',result:{error:{code:'failure'}}}];
+  const result=await request(`/api/admin/guests/${token}`,'PATCH',{name:'A',phone:'123',party_size:1,event_ids:[token]},true);assert.equal(result.status,503);assert.match(result.data.error,/old events could not be removed/);
+});

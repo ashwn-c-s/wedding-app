@@ -5,6 +5,16 @@ export interface EventRecord {
   directions_text: string | null; is_visible: boolean; created_at?: string;
 }
 export interface Rsvp { guest_id: string; event_id: string; attending: boolean; submitted_at?: string; }
+export function validateGuest(body: unknown): {name:string;phone:string;party_size:number;event_ids:string[]} {
+  if (!body || typeof body !== 'object' || Array.isArray(body)) throw new Error('Invalid guest details');
+  const input = body as Record<string,unknown>;
+  if (Object.keys(input).some(key=>!['name','phone','party_size','event_ids'].includes(key))) throw new Error('Unsupported guest field');
+  if (typeof input.name !== 'string' || !input.name.trim() || input.name.trim().length>200) throw new Error('Enter a name of at most 200 characters');
+  if (typeof input.phone !== 'string' || !input.phone.trim() || input.phone.trim().length>50) throw new Error('Enter a phone number of at most 50 characters');
+  if (!Number.isSafeInteger(input.party_size) || (input.party_size as number)<1 || (input.party_size as number)>1000) throw new Error('Party size must be between 1 and 1000');
+  if (!Array.isArray(input.event_ids) || !input.event_ids.length || input.event_ids.length>100 || input.event_ids.some(id=>typeof id!=='string' || !uuid.test(id)) || new Set(input.event_ids).size!==input.event_ids.length) throw new Error('Choose one or more unique events');
+  return {name:input.name.trim(),phone:input.phone.trim(),party_size:input.party_size as number,event_ids:input.event_ids as string[]};
+}
 export function validateResponses(body: unknown, allowedIds: string[]): {event_id: string; attending: boolean}[] {
   if (!body || typeof body !== 'object' || !('responses' in body) || !Array.isArray(body.responses)) throw new Error('Responses must be an array');
   const responses: {event_id: string; attending: boolean}[] = [];
