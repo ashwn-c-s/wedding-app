@@ -52,4 +52,11 @@ Existing deployment branch: `main`. Existing Vercel projects: frontend root `fro
 
 Unrelated pre-existing edits to plan.md, requirements.md and favicon, plus the local manual HTTP request file and earlier status snapshot, remain untouched/uncommitted. Related landing/service edits and required venue assets are preserved in the implementation commit. No force-push or production environment change is used.
 
-Post-push deployment verification: pending at preparation time. Admin live sign-in/import/edit verification requires the missing owner Auth account. Physical WhatsApp/mobile and cross-browser checks remain manual. See backend/SECURITY_AND_RELEASE.md for further security evidence and limitations.
+Implementation commit: `0bf57a1cb8e75f909fd94b49820d466160f1c91c`, pushed to `origin/main`. GitHub commit statuses reported **success** for both Vercel projects:
+
+- Frontend deployment: https://vercel.com/ashwin-cs-team/wedding-app-ebfy/2GKa4fjharJxCrrAyoq6ybSb7yaK
+- API deployment: https://vercel.com/ashwin-cs-team/wedding-app/Auj8KBycuWoEJbD23LRKS9JEhqqm
+
+Post-push live verification: public-events API HTTP 200 with four events, `Cache-Control: no-store` and `Referrer-Policy: no-referrer`; unauthenticated admin session HTTP 401. Production browser checks confirmed generic/malformed/default-token fallback, owner-approved guest RSVP redirect/confirmation refresh, permitted venues, and unauthorized admin redirect. No new browser errors appeared during the release smoke tests. Mobile **375×812** and desktop **1440×900** showed no horizontal overflow in the inspected production flows.
+
+Release verdict: **Ready with known limitations for guest use**. Admin UI/API are deployed and automated tests pass, but live admin use remains blocked until the owner creates/confirms the approved Auth account and enrollment succeeds. No live RSVP submission, CSV import or event mutation was performed. Physical WhatsApp/mobile and cross-browser checks remain manual; authenticated direct-table RLS/write policies still require owner review. See backend/SECURITY_AND_RELEASE.md for transaction limits and security evidence.
