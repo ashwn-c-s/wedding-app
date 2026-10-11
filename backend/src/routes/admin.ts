@@ -1,4 +1,5 @@
 import {Router} from 'express';
+import {atomicError} from '../lib/atomic';
 import {allRows} from '../lib/pagination';
 import {supabase} from '../lib/supabase';
 import {adminAuth,fullAdmin,AdminRequest} from '../middleware/adminAuth';
@@ -15,48 +16,17 @@ router.get('/guests',fullAdmin,async (_req,res)=>{
 });
 router.post('/guests',fullAdmin,async (req,res)=>{
   let input;try {input=validateGuest(req.body);}catch(error){res.status(400).json({error:(error as Error).message});return;}
-  const {event_ids,...details}=input;
-  const {data:events,error:eventError}=await supabase.from('events').select('id').in('id',event_ids);
-  if(eventError){res.status(503).json({error:'Unable to validate events'});return;}
-  if(events?.length!==event_ids.length){res.status(400).json({error:'An event no longer exists. Refresh and choose again.'});return;}
-  const {data:guest,error}=await supabase.from('guests').insert(details).select('id,name,phone,party_size,invite_token').single();
-  if(error || !guest){res.status(error?.code==='23505'?409:503).json({error:error?.code==='23505'?'A guest with this phone already exists. Edit that guest instead.':'Unable to create guest'});return;}
-  const {error:assignmentError}=await supabase.from('guest_events').insert(event_ids.map(event_id=>({guest_id:guest.id,event_id})));
-  if(assignmentError){res.status(503).json({error:'Guest created, but events could not be assigned. Refresh and edit this guest before sharing the invitation.',guest_id:guest.id});return;}
-  res.status(201).json({guest:{...guest,event_ids,responses:[]}});
+  const {data,error}=await supabase.rpc('save_guest_atomic',{p_mode:'create',p_guest_id:null,p_name:input.name,p_phone:input.phone,p_party_size:input.party_size,p_event_ids:input.event_ids});
+  if(error){const failure=atomicError(error,'Unable to create guest. Nothing was saved.','A guest with this phone already exists. Edit that guest instead.');res.status(failure.status).json({error:failure.error});return;}
+  res.status(201).json({guest:data.guest});
 });
 router.patch('/guests/:id',fullAdmin,async (req,res)=>{
   const id=req.params.id;
   if(typeof id!=='string' || !uuid.test(id)){res.status(400).json({error:'Invalid guest ID'});return;}
   let input;try {input=validateGuest(req.body);}catch(error){res.status(400).json({error:(error as Error).message});return;}
-  const {event_ids,...details}=input;
-  const {data:guest,error:guestError}=await supabase.from('guests').select('id,invite_token').eq('id',id).maybeSingle();
-  if(guestError){res.status(503).json({error:'Unable to load guest'});return;}
-  if(!guest){res.status(404).json({error:'Guest not found'});return;}
-  const [assigned,saved,events]=await Promise.all([
-    supabase.from('guest_events').select('event_id').eq('guest_id',id),
-    supabase.from('rsvps').select('event_id,attending').eq('guest_id',id),
-    supabase.from('events').select('id').in('id',event_ids)]);
-  if(assigned.error || saved.error || events.error){res.status(503).json({error:'Unable to verify guest events'});return;}
-  if(events.data?.length!==event_ids.length){res.status(400).json({error:'An event no longer exists. Refresh and choose again.'});return;}
-  const previous=(assigned.data ?? []).map(row=>row.event_id);
-  const additions=event_ids.filter(eventId=>!previous.includes(eventId));
-  const removals=previous.filter(eventId=>!event_ids.includes(eventId));
-  if(saved.data?.length && (additions.length || removals.length)){res.status(409).json({error:'This guest has already submitted an RSVP. Keep their invited events unchanged; their details can still be edited.'});return;}
-  // Preserve the invitation token and all saved RSVP rows. The existing schema
-  // exposes separate REST writes; partial saves are reported for reconciliation.
-  const {data:updated,error}=await supabase.from('guests').update(details).eq('id',id).select('id,name,phone,party_size,invite_token').maybeSingle();
-  if(error){res.status(error.code==='23505'?409:503).json({error:error.code==='23505'?'Another guest already uses this phone number.':'Unable to save guest details'});return;}
-  if(!updated){res.status(404).json({error:'Guest not found'});return;}
-  if(additions.length){
-    const {error:assignmentError}=await supabase.from('guest_events').upsert(additions.map(event_id=>({guest_id:id,event_id})),{onConflict:'guest_id,event_id',ignoreDuplicates:true});
-    if(assignmentError){res.status(503).json({error:'Guest details saved, but event assignment failed. Refresh and review this guest before retrying.'});return;}
-  }
-  if(removals.length){
-    const {error:removalError}=await supabase.from('guest_events').delete().eq('guest_id',id).in('event_id',removals);
-    if(removalError){res.status(503).json({error:'Guest details and new events saved, but some old events could not be removed. Refresh and review this guest.'});return;}
-  }
-  res.json({guest:{...updated,event_ids,responses:saved.data ?? []}});
+  const {data,error}=await supabase.rpc('save_guest_atomic',{p_mode:'edit',p_guest_id:id,p_name:input.name,p_phone:input.phone,p_party_size:input.party_size,p_event_ids:input.event_ids});
+  if(error){const failure=atomicError(error,'Unable to save guest. Nothing was changed.','Another guest already uses this phone number.');res.status(failure.status).json({error:failure.error});return;}
+  res.json({guest:data.guest});
 });
 router.post('/guests/import',fullAdmin,async (req,res)=>{
   if(typeof req.body?.csv !== 'string' || req.body.csv.length > 500000) {res.status(400).json({error:'Supply CSV text (maximum 500 KB)'});return;}
@@ -76,25 +46,9 @@ router.post('/guests/import',fullAdmin,async (req,res)=>{
       if(!slugs.length || slugs.some(s=>!s) || new Set(slugs).size !== slugs.length) throw new Error('Supply unique event slugs separated by +');
       const eventIds = slugs.map(slug=>events?.find(event=>event.slug===slug)?.id);
       if(eventIds.some(id=>!id)) throw new Error('Unknown event slug');
-      const {data:existing,error:guestError} = await supabase.from('guests').select('id,name,party_size').eq('phone',phone).maybeSingle();
-      if(guestError) throw new Error('Unable to check existing guest');
-      // Never remove assignments or overwrite guest details after an RSVP. Existing
-      // assignments must exactly match the import so re-import cannot broaden access.
-      if(existing) {
-        const [saved,assigned] = await Promise.all([supabase.from('rsvps').select('id').eq('guest_id',existing.id).limit(1),supabase.from('guest_events').select('event_id').eq('guest_id',existing.id)]);
-        if(saved.error || assigned.error) throw new Error('Unable to verify existing RSVP and event assignments');
-        const assignedIds = (assigned.data ?? []).map(a=>a.event_id);
-        if(assignedIds.length !== eventIds.length || assignedIds.some(id=>!eventIds.includes(id))) throw new Error('Existing event assignments differ; import cannot change them safely');
-        if(saved.data?.length && (existing.name !== name || existing.party_size !== Number(size))) throw new Error('Confirmed guest details are locked');
-        if(!saved.data?.length) {const {error:updateError} = await supabase.from('guests').update({name,party_size:Number(size)}).eq('id',existing.id);if(updateError) throw new Error('Unable to update guest');}
-        results.push({row:i+1,phone,status:'updated'});
-      } else {
-        const {data:created,error:createError} = await supabase.from('guests').insert({name,phone,party_size:Number(size)}).select('id').single();
-        if(createError || !created) throw new Error('Unable to create guest (phone may already exist); retry import');
-        const {error:assignError} = await supabase.from('guest_events').insert(eventIds.map(event_id=>({guest_id:created.id,event_id})));
-        if(assignError) throw new Error('Guest created but event assignment failed; administrator must reconcile assignments before sharing invitation');
-        results.push({row:i+1,phone,status:'created'});
-      }
+      const {data:saved,error:saveError}=await supabase.rpc('save_guest_atomic',{p_mode:'import',p_guest_id:null,p_name:name,p_phone:phone,p_party_size:Number(size),p_event_ids:eventIds});
+      if(saveError) throw new Error(atomicError(saveError,'Unable to save this row. Nothing was changed for this row.','Phone already exists; refresh and retry this row.').error);
+      results.push({row:i+1,phone,status:saved.created?'created':'updated'});
     } catch(error) {results.push({row:i+1,phone,status:'error',message:(error as Error).message});}
   }
   res.json({results,created:results.filter(r=>r.status==='created').length,updated:results.filter(r=>r.status==='updated').length,failed:results.filter(r=>r.status==='error').length});

@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import { atomicError } from '../lib/atomic';
 import { supabase } from '../lib/supabase';
 import { validateToken, GuestRequest } from '../middleware/validateToken';
 import { EventRecord, validateResponses } from '../lib/validation';
@@ -32,10 +33,9 @@ router.post('/:token/rsvp',validateToken,async (req:GuestRequest,res) => {
   let responses;
   try { responses = validateResponses(req.body,events.map(event=>event.id)); }
   catch (error) { res.status(400).json({error:(error as Error).message}); return; }
-  // A single INSERT is atomic. Concurrent requests contain the same complete event set;
-  // the existing unique guest/event constraint rejects the second insert entirely.
-  const {error} = await supabase.from('rsvps').insert(responses.map(response=>({...response,guest_id:guest.id})));
-  if (error) { res.status(error.code === '23505' ? 409 : 503).json({error:error.code === '23505' ? 'RSVP already submitted' : 'Failed to submit RSVP'}); return; }
+  // Revalidate under the same guest-row lock used by admin assignment saves.
+  const {error} = await supabase.rpc('submit_rsvp_atomic',{p_guest_id:guest.id,p_invite_token:guest.invite_token,p_responses:responses});
+  if(error){const failure=atomicError(error,'Your RSVP could not be saved. Please try again.','RSVP already submitted');res.status(failure.status).json({error:failure.error});return;}
   res.json({success:true});
 });
 router.get('/:token/venues',validateToken,async (req:GuestRequest,res)=>{res.json({venues:await permittedEvents(req.guest!.id)});});

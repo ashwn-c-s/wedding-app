@@ -3,7 +3,7 @@ const assert=require('node:assert/strict');
 const {once}=require('node:events');
 const supabasePath=require.resolve('../dist/lib/supabase');
 let plans=[];let authResult;
-const db={auth:{getUser:async()=>authResult},from(table){
+const db={auth:{getUser:async()=>authResult},rpc:async(name,args)=>{const plan=plans.shift();assert.ok(plan,`Unexpected RPC ${name}`);assert.equal(name,plan.rpc);return typeof plan.result==='function'?plan.result(args):plan.result;},from(table){
   const plan=plans.shift();assert.ok(plan,`Unexpected table ${table}`);assert.equal(table,plan.table);
   const calls=[];const query=new Proxy({}, {get(_target,prop){if(prop==='then')return(resolve,reject)=>Promise.resolve(typeof plan.result==='function'?plan.result(calls):plan.result).then(resolve,reject);return(...args)=>{calls.push([prop,...args]);return query;};}});
   return query;
@@ -43,12 +43,13 @@ test('unauthorized event RSVP never reaches insert',async()=>{
   plans=[guestPlan(),{table:'rsvps',result:ok([])},{table:'guest_events',result:ok([{event:{id:eid}}])}];
   assert.equal((await request(`/api/invite/${token}/rsvp`,'POST',{responses:[{event_id:token,attending:true}]})).status,400);
 });
-test('RSVP inserts complete response set and maps concurrent unique conflict to locked response',async()=>{
+test('RSVP submits through the guest-locking RPC and maps concurrent conflicts',async()=>{
   for(const conflict of [false,true]){
-    plans=[guestPlan(),{table:'rsvps',result:ok([])},{table:'guest_events',result:ok([{event:{id:eid}}])},{table:'rsvps',result:calls=>{assert.deepEqual(calls.find(c=>c[0]==='insert')[1],[{guest_id:'guest',event_id:eid,attending:false}]);return conflict?{error:{code:'23505'}}:ok(null);}}];
+    plans=[guestPlan(),{table:'rsvps',result:ok([])},{table:'guest_events',result:ok([{event:{id:eid}}])},{rpc:'submit_rsvp_atomic',result:args=>{assert.deepEqual(args,{p_guest_id:'guest',p_invite_token:token,p_responses:[{event_id:eid,attending:false}]});return conflict?{error:{code:'P0001',message:'RSVP_ALREADY_SUBMITTED'}}:ok({success:true});}}];
     assert.equal((await request(`/api/invite/${token}/rsvp`,'POST',{responses:[{event_id:eid,attending:false}]})).status,conflict?409:200);
   }
 });
+
 test('refresh retrieves persisted confirmation status',async()=>{
   plans=[guestPlan(),{table:'rsvps',result:ok([{event_id:eid,attending:true}])}];
   assert.deepEqual((await request(`/api/invite/${token}/rsvp-status`)).data,{submitted:true,responses:[{event_id:eid,attending:true}]});
@@ -69,26 +70,28 @@ test('full admins can update whitelisted existing event fields',async()=>{
   assert.equal((await request(`/api/admin/events/${eid}`,'PATCH',{venue_name:'New venue'},true)).status,200);
   plans=[adminPlan('full')];assert.equal((await request(`/api/admin/events/${eid}`,'PATCH',{id:token},true)).status,400);
 });
-test('import reports each row and does not write invalid records',async()=>{
-  plans=[adminPlan('full'),{table:'events',result:ok([{id:eid,slug:'wedding'}])},{table:'guests',result:ok(null)},{table:'guests',result:ok({id:'new'})},{table:'guest_events',result:ok(null)}];
-  const {data}=await request('/api/admin/guests/import','POST',{csv:'name,phone,party_size,events\nGood,123,2,wedding\nBad,456,no,wedding\nUnknown,789,1,invalid'},true);
-  assert.equal(data.created,1);assert.equal(data.failed,2);
+test('import saves valid rows atomically and does not write invalid records',async()=>{
+  plans=[adminPlan('full'),{table:'events',result:ok([{id:eid,slug:'wedding'}])},{rpc:'save_guest_atomic',result:args=>{assert.equal(args.p_mode,'import');assert.deepEqual(args.p_event_ids,[eid]);return ok({created:true,guest});}}];
+  const {data}=await request('/api/admin/guests/import','POST',{csv:'name,phone,party_size,events\nGood,123,2,wedding\nBad,456,no,wedding\nUnknown,789,1,invalid'},true);assert.equal(data.created,1);assert.equal(data.failed,2);
 });
-test('idempotent import preserves token and existing confirmed details',async()=>{
-  plans=[adminPlan('full'),{table:'events',result:ok([{id:eid,slug:'wedding'}])},{table:'guests',result:ok({id:'g',name:'Good',party_size:2})},{table:'rsvps',result:ok([{id:'r'}])},{table:'guest_events',result:ok([{event_id:eid}])}];
+
+test('idempotent import uses the atomic function for an existing guest',async()=>{
+  plans=[adminPlan('full'),{table:'events',result:ok([{id:eid,slug:'wedding'}])},{rpc:'save_guest_atomic',result:ok({created:false,guest})}];
   const {data}=await request('/api/admin/guests/import','POST',{csv:'name,phone,party_size,events\nGood,123,2,wedding'},true);assert.equal(data.updated,1);
 });
-test('assignment failure is explicitly reported without destructive rollback',async()=>{
-  plans=[adminPlan('full'),{table:'events',result:ok([{id:eid,slug:'wedding'}])},{table:'guests',result:ok(null)},{table:'guests',result:ok({id:'new'})},{table:'guest_events',result:{error:{code:'fail'}}}];
-  const {data}=await request('/api/admin/guests/import','POST',{csv:'name,phone,party_size,events\nGood,123,2,wedding'},true);assert.equal(data.failed,1);assert.match(data.results[0].message,/Guest created but event assignment failed/);
+
+test('atomic import failure reports that the row was not changed',async()=>{
+  plans=[adminPlan('full'),{table:'events',result:ok([{id:eid,slug:'wedding'}])},{rpc:'save_guest_atomic',result:{error:{code:'23503'}}}];
+  const {data}=await request('/api/admin/guests/import','POST',{csv:'name,phone,party_size,events\nGood,123,2,wedding'},true);assert.equal(data.failed,1);assert.match(data.results[0].message,/Nothing was changed for this row/);
 });
+
 test('restricted dashboard contains permitted event IDs and no phones or invite tokens',async()=>{
   plans=[adminPlan('restricted'),{table:'guests',result:ok([{id:'g',name:'Test',party_size:2}])},{table:'events',result:ok([{id:eid}])},{table:'rsvps',result:ok([])},{table:'guest_events',result:ok([{guest_id:'g',event_id:eid}])}];
   const {status,data}=await request('/api/admin/rsvps','GET',undefined,true);
   assert.equal(status,200);assert.deepEqual(data.guests,[{id:'g',name:'Test',party_size:2,event_ids:[eid]}]);assert.deepEqual(data.counts,{invited:1,confirmed:0,declined:0,pending:1});
 });
-test('guest import rejects existing assignment changes before writing',async()=>{
-  plans=[adminPlan('full'),{table:'events',result:ok([{id:eid,slug:'wedding'}])},{table:'guests',result:ok({id:'g',name:'Good',party_size:2})},{table:'rsvps',result:ok([])},{table:'guest_events',result:ok([{event_id:token}])}];
+test('guest import reports the database assignment lock',async()=>{
+  plans=[adminPlan('full'),{table:'events',result:ok([{id:eid,slug:'wedding'}])},{rpc:'save_guest_atomic',result:{error:{code:'P0001',message:'IMPORT_ASSIGNMENTS_DIFFER'}}}];
   const {data}=await request('/api/admin/guests/import','POST',{csv:'name,phone,party_size,events\nGood,123,2,wedding'},true);assert.equal(data.failed,1);assert.match(data.results[0].message,/assignments differ/);
 });
 
@@ -97,29 +100,31 @@ test('restricted admins cannot create guests, edit guests or create events',asyn
     plans=[adminPlan('restricted')];assert.equal((await request(path,method,{},true)).status,403);
   }
 });
-test('guest creation validates fields and requires real assigned events before inserting',async()=>{
+test('guest creation validates before RPC and returns the atomic result',async()=>{
   plans=[adminPlan('full')];assert.equal((await request('/api/admin/guests','POST',{name:'A',phone:'123',party_size:0,event_ids:[eid]},true)).status,400);
-  plans=[adminPlan('full'),{table:'events',result:ok([])}];assert.equal((await request('/api/admin/guests','POST',{name:'A',phone:'123',party_size:1,event_ids:[eid]},true)).status,400);
-  plans=[adminPlan('full'),{table:'events',result:ok([{id:eid}])},{table:'guests',result:calls=>{assert.deepEqual(calls.find(c=>c[0]==='insert')[1],{name:'A',phone:'123',party_size:2});return ok({...guest,id:token,name:'A'});}},{table:'guest_events',result:calls=>{assert.deepEqual(calls.find(c=>c[0]==='insert')[1],[{guest_id:token,event_id:eid}]);return ok(null);}}];
+  plans=[adminPlan('full'),{rpc:'save_guest_atomic',result:{error:{code:'P0001',message:'INVALID_EVENTS'}}}];assert.equal((await request('/api/admin/guests','POST',{name:'A',phone:'123',party_size:1,event_ids:[eid]},true)).status,400);
+  plans=[adminPlan('full'),{rpc:'save_guest_atomic',result:args=>{assert.deepEqual(args,{p_mode:'create',p_guest_id:null,p_name:'A',p_phone:'123',p_party_size:2,p_event_ids:[eid]});return ok({created:true,guest:{...guest,event_ids:[eid],responses:[]}});}}];
   const result=await request('/api/admin/guests','POST',{name:' A ',phone:'123',party_size:2,event_ids:[eid]},true);assert.equal(result.status,201);assert.deepEqual(result.data.guest.event_ids,[eid]);
 });
-test('guest creation reports duplicate phones and partial assignment failure',async()=>{
-  plans=[adminPlan('full'),{table:'events',result:ok([{id:eid}])},{table:'guests',result:{error:{code:'23505'}}}];assert.equal((await request('/api/admin/guests','POST',{name:'A',phone:'123',party_size:1,event_ids:[eid]},true)).status,409);
-  plans=[adminPlan('full'),{table:'events',result:ok([{id:eid}])},{table:'guests',result:ok({...guest,id:token})},{table:'guest_events',result:{error:{code:'failure'}}}];
-  const result=await request('/api/admin/guests','POST',{name:'A',phone:'123',party_size:1,event_ids:[eid]},true);assert.equal(result.status,503);assert.equal(result.data.guest_id,token);assert.match(result.data.error,/Guest created/);
+
+test('guest creation reports duplicates and atomic failure without partial guest creation',async()=>{
+  plans=[adminPlan('full'),{rpc:'save_guest_atomic',result:{error:{code:'23505'}}}];assert.equal((await request('/api/admin/guests','POST',{name:'A',phone:'123',party_size:1,event_ids:[eid]},true)).status,409);
+  plans=[adminPlan('full'),{rpc:'save_guest_atomic',result:{error:{code:'23503'}}}];const result=await request('/api/admin/guests','POST',{name:'A',phone:'123',party_size:1,event_ids:[eid]},true);assert.equal(result.status,503);assert.match(result.data.error,/Nothing was saved/);assert.equal(result.data.guest_id,undefined);
 });
-test('confirmed guest details can change without replacing their token or RSVP',async()=>{
-  plans=[adminPlan('full'),{table:'guests',result:ok({id:token,invite_token:eid})},{table:'guest_events',result:ok([{event_id:eid}])},{table:'rsvps',result:ok([{event_id:eid,attending:true}])},{table:'events',result:ok([{id:eid}])},{table:'guests',result:calls=>{assert.deepEqual(calls.find(c=>c[0]==='update')[1],{name:'Changed',phone:'456',party_size:3});return ok({...guest,id:token,invite_token:eid,name:'Changed'});}}];
+
+test('guest edit returns the existing token and responses from the atomic function',async()=>{
+  plans=[adminPlan('full'),{rpc:'save_guest_atomic',result:args=>{assert.equal(args.p_mode,'edit');assert.equal(args.p_guest_id,token);return ok({guest:{...guest,invite_token:eid,responses:[{event_id:eid,attending:true}]}});}}];
   const result=await request(`/api/admin/guests/${token}`,'PATCH',{name:'Changed',phone:'456',party_size:3,event_ids:[eid]},true);assert.equal(result.status,200);assert.equal(result.data.guest.invite_token,eid);assert.deepEqual(result.data.guest.responses,[{event_id:eid,attending:true}]);
 });
-test('confirmed guest event changes are rejected before any write',async()=>{
-  plans=[adminPlan('full'),{table:'guests',result:ok({id:token})},{table:'guest_events',result:ok([{event_id:eid}])},{table:'rsvps',result:ok([{event_id:eid,attending:true}])},{table:'events',result:ok([{id:token}])}];
-  assert.equal((await request(`/api/admin/guests/${token}`,'PATCH',{name:'A',phone:'123',party_size:1,event_ids:[token]},true)).status,409);
+
+test('confirmed guest assignment changes map the atomic RSVP lock to conflict',async()=>{
+  plans=[adminPlan('full'),{rpc:'save_guest_atomic',result:{error:{code:'P0001',message:'GUEST_RSVP_LOCKED'}}}];assert.equal((await request(`/api/admin/guests/${token}`,'PATCH',{name:'A',phone:'123',party_size:1,event_ids:[token]},true)).status,409);
 });
-test('pending guest event update adds and removes only the selected guest assignments',async()=>{
-  plans=[adminPlan('full'),{table:'guests',result:ok({id:token})},{table:'guest_events',result:ok([{event_id:eid}])},{table:'rsvps',result:ok([])},{table:'events',result:ok([{id:token}])},{table:'guests',result:ok({...guest,id:token})},{table:'guest_events',result:calls=>{assert.deepEqual(calls.find(c=>c[0]==='upsert')[1],[{guest_id:token,event_id:token}]);return ok(null);}},{table:'guest_events',result:calls=>{assert.ok(calls.some(c=>c[0]==='eq'&&c[1]==='guest_id'&&c[2]===token));assert.deepEqual(calls.find(c=>c[0]==='in').slice(1),['event_id',[eid]]);return ok(null);}}];
-  assert.equal((await request(`/api/admin/guests/${token}`,'PATCH',{name:'A',phone:'123',party_size:1,event_ids:[token]},true)).status,200);
+
+test('pending guest assignment replacement uses one RPC with the chosen guest and events',async()=>{
+  plans=[adminPlan('full'),{rpc:'save_guest_atomic',result:args=>{assert.equal(args.p_guest_id,token);assert.deepEqual(args.p_event_ids,[eid]);return ok({guest:{...guest,event_ids:[eid]}});}}];assert.equal((await request(`/api/admin/guests/${token}`,'PATCH',{name:'A',phone:'123',party_size:1,event_ids:[eid]},true)).status,200);
 });
+
 test('event creation requires fields, rejects duplicate slugs and returns created event',async()=>{
   plans=[adminPlan('full')];assert.equal((await request('/api/admin/events','POST',{name:'Dinner'},true)).status,400);
   const body={name:'Dinner',slug:'family-dinner',date:'2026-11-14T18:00:00+05:30',is_visible:false};
@@ -127,7 +132,9 @@ test('event creation requires fields, rejects duplicate slugs and returns create
   plans=[adminPlan('full'),{table:'events',result:{error:{code:'23505'}}}];assert.equal((await request('/api/admin/events','POST',body,true)).status,409);
 });
 
-test('guest edit reports partial removal failure without touching saved responses',async()=>{
-  plans=[adminPlan('full'),{table:'guests',result:ok({id:token})},{table:'guest_events',result:ok([{event_id:eid}])},{table:'rsvps',result:ok([])},{table:'events',result:ok([{id:token}])},{table:'guests',result:ok({...guest,id:token})},{table:'guest_events',result:ok(null)},{table:'guest_events',result:{error:{code:'failure'}}}];
-  const result=await request(`/api/admin/guests/${token}`,'PATCH',{name:'A',phone:'123',party_size:1,event_ids:[token]},true);assert.equal(result.status,503);assert.match(result.data.error,/old events could not be removed/);
+test('guest edit reports a rolled-back database failure',async()=>{
+  plans=[adminPlan('full'),{rpc:'save_guest_atomic',result:{error:{code:'23503'}}}];const result=await request(`/api/admin/guests/${token}`,'PATCH',{name:'A',phone:'123',party_size:1,event_ids:[eid]},true);assert.equal(result.status,503);assert.match(result.data.error,/Nothing was changed/);
+});
+test('RSVP rejects a stale assignment snapshot at the transaction boundary',async()=>{
+  plans=[guestPlan(),{table:'rsvps',result:ok([])},{table:'guest_events',result:ok([{event:{id:eid}}])},{rpc:'submit_rsvp_atomic',result:{error:{code:'P0001',message:'EVENT_ASSIGNMENTS_CHANGED'}}}];const result=await request(`/api/invite/${token}/rsvp`,'POST',{responses:[{event_id:eid,attending:true}]});assert.equal(result.status,400);assert.match(result.data.error,/invited events have changed/);
 });
