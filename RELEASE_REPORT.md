@@ -68,3 +68,11 @@ Added full-admin-only POST guest/event creation and guest detail/event-assignmen
 No schema/RLS changes. Guest details and assignment writes use separate existing-table operations; partial failures trigger explicit messages and reload for reconciliation. Do not edit assignments while a guest is actively submitting an RSVP. As with the existing importer, strict atomicity and serialization across concurrent admin/RSVP requests require a separately approved database transaction/RPC. No live guest/event mutation is used for validation.
 
 Validation for this update: 30 backend tests and 63 frontend tests passed, including role restrictions, submitted-RSVP protection, selected assignment changes, duplicate phone/slug handling, partial-save recovery, new guest/event forms and India-time conversion. Frontend production build passed within the existing bundle budget.
+
+## Owner feedback and RSVP/default-event correction — 11 October 2026
+
+Owner confirmed production admin verification succeeded and event timings are correct. Claude history and gallery are explicitly not required. Public default-event listing is now restricted to visible wedding and reception records; assigned Mehndi/Wedding Eve remain available on personalized invitations.
+
+The RSVP layout puts visible headings inside cards and stacks response choices on small screens with 44px tap targets. Synthetic read-only browser preview confirmed response review and no horizontal overflow at 320px, 375px and 1280px. No production RSVP was submitted.
+
+Atomic guest/assignment saves and RSVP coordination are prepared in database/atomic-guest-saves.sql and backend integration. The functions are SECURITY INVOKER and executable only by service_role. Eight real local PostgreSQL function tests verify permission restrictions, complete create/edit rollback, invitation preservation, saved RSVP locks, stale event-set rejection and per-row import atomicity. They do not constitute a concurrent multi-connection stress test. Apply the reviewed SQL before deploying the atomic backend. Existing tables, RLS policies and records are not migrated or rewritten. Production function application is pending owner action/SQL-editor access.

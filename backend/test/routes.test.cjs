@@ -28,8 +28,8 @@ test.after(()=>server.close());
 test.beforeEach(()=>{plans=[];authResult={data:{user:{id:'admin-id'}},error:null};});
 test('malformed invitation rejects without querying the database',async()=>{assert.equal((await request('/api/invite/bad-token')).status,404);});
 test('unknown invitation returns 404',async()=>{plans=[{table:'guests',result:ok(null)}];assert.equal((await request(`/api/invite/${token}`)).status,404);});
-test('default public events only request visible event data',async()=>{
-  plans=[{table:'events',result:calls=>{assert.ok(calls.some(c=>c[0]==='eq'&&c[1]==='is_visible'&&c[2]===true));return ok([{id:eid}]);}}];
+test('default public events only request visible wedding and reception events',async()=>{
+  plans=[{table:'events',result:calls=>{assert.ok(calls.some(c=>c[0]==='eq'&&c[1]==='is_visible'&&c[2]===true));assert.deepEqual(calls.find(c=>c[0]==='in').slice(1),['slug',['wedding','reception']]);return ok([{id:eid}]);}}];
   assert.deepEqual((await request('/api/invite/defaultevents')).data,{venues:[{id:eid}]});
 });
 test('personalized invitation uses inner joined permitted visible events and omits phone/token',async()=>{

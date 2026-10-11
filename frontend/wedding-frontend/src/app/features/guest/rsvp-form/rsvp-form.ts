@@ -82,7 +82,8 @@ export class RsvpForm {
         this.submitting.set(false);
         if (error.status === 409) { void this.router.navigate(['/invite', this.token, 'rsvp', 'confirmed']); return; }
         if ([401, 403, 404, 410].includes(error.status)) { void this.router.navigate(['/invite', this.token]); return; }
-        this.error.set('Your RSVP could not be saved. Please try again.');
+        this.error.set(error.status === 400 && typeof error.error?.error === 'string'
+          ? error.error.error : 'Your RSVP could not be saved. Please try again.');
       }
     });
   }

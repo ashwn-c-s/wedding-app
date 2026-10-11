@@ -10,7 +10,7 @@ export async function permittedEvents(guestId:string):Promise<EventRecord[]> {
   return (data ?? []).flatMap(row => (Array.isArray(row.event) ? row.event : [row.event])).filter(Boolean);
 }
 router.get('/defaultevents',async (_req,res) => {
-  const {data,error} = await supabase.from('events').select(fields).eq('is_visible',true).order('date');
+  const {data,error} = await supabase.from('events').select(fields).eq('is_visible',true).in('slug',['wedding','reception']).order('date');
   if (error) { res.status(503).json({error:'Failed to fetch events'}); return; }
   res.json({venues:data ?? []});
 });

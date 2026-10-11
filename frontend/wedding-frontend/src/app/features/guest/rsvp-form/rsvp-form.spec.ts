@@ -23,6 +23,11 @@ describe('RSVP workflow', () => {
   it('prevents duplicate submissions while saving', () => { api.submitRsvp.mockReturnValue(new Subject()); const component = create().componentInstance; component.choose('event-1', true); component.review(); component.submit(); component.submit(); expect(api.submitRsvp).toHaveBeenCalledOnce(); expect(component.submitting()).toBe(true); });
   it('reopens persisted confirmation after a page refresh', () => { api.getRsvpStatus.mockReturnValue(of({submitted: true, responses: [{event_id: 'event-1', attending: true}]})); create(); expect(TestBed.inject(Router).navigate).toHaveBeenCalledWith(['/invite', '11111111-1111-4111-8111-111111111111', 'rsvp', 'confirmed']); });
   it('shows a retryable submission error while retaining reviewed choices', () => { api.submitRsvp.mockReturnValue(throwError(() => ({status: 500}))); const component = create().componentInstance; component.choose('event-1', true); component.review(); component.submit(); expect(component.error()).toContain('could not be saved'); expect(component.submitting()).toBe(false); expect(component.reviewing()).toBe(true); });
+  it('explains changed event assignments and offers to reload the invitation', () => {
+    api.submitRsvp.mockReturnValue(throwError(() => ({status:400,error:{error:'Your invited events have changed. Refresh your invitation and respond again.'}})));
+    const fixture=create();const component=fixture.componentInstance;component.choose('event-1',true);component.review();component.submit();fixture.detectChanges();
+    expect(fixture.nativeElement.textContent).toContain('Your invited events have changed');expect(fixture.nativeElement.textContent).toContain('Reload invitation');
+  });
   it('uses confirmation when the server reports an existing locked RSVP', () => { api.submitRsvp.mockReturnValue(throwError(() => ({status: 409}))); const component = create().componentInstance; component.choose('event-1', true); component.review(); component.submit(); expect(TestBed.inject(Router).navigate).toHaveBeenCalledWith(['/invite', '11111111-1111-4111-8111-111111111111', 'rsvp', 'confirmed']); });
   it('resets responses and review when Angular reuses the route for another invite', () => {
     const params = new BehaviorSubject(convertToParamMap({token: '11111111-1111-4111-8111-111111111111'}));
