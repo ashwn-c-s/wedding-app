@@ -37,3 +37,5 @@ Unrelated local admin styling edits and existing favicon/planning changes are ke
 - Local fixture browser checks covered desktop 1440px and mobile 375px, album filtering, viewer navigation, Escape/focus restoration and absence of horizontal overflow. Production upload still needs an owner-selected real photo to verify the complete Storage flow.
 
 Gallery release validation: exact staged source passed 49 backend tests, 72 frontend tests and the production build (373.20 kB initial bundle). Gallery stylesheet has a non-blocking 202-byte warning above the 4 kB warning budget, below the 8 kB error limit. Browser fixture verification additionally passed at 320px with 44px chapter controls.
+
+Gallery implementation commit 89d0644 deployed successfully to both Vercel projects. Live checks: `/api/gallery` returned an empty photo list, anonymous upload requests returned HTTP 401, `/gallery` rendered without browser errors or mobile horizontal overflow, and `/admin/gallery` redirected anonymous visitors to sign-in while preserving the destination. A final CSS correction gives the mobile empty-state heading explicit line spacing. No production photo upload was performed.
