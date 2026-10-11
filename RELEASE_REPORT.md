@@ -76,3 +76,18 @@ Owner confirmed production admin verification succeeded and event timings are co
 The RSVP layout puts visible headings inside cards and stacks response choices on small screens with 44px tap targets. Synthetic read-only browser preview confirmed response review and no horizontal overflow at 320px, 375px and 1280px. No production RSVP was submitted.
 
 Atomic guest/assignment saves and RSVP coordination are prepared in database/atomic-guest-saves.sql and backend integration. The functions are SECURITY INVOKER and executable only by service_role. Eight real local PostgreSQL function tests verify permission restrictions, complete create/edit rollback, invitation preservation, saved RSVP locks, stale event-set rejection and per-row import atomicity. They do not constitute a concurrent multi-connection stress test. Apply the reviewed SQL before deploying the atomic backend. Existing tables, RLS policies and records are not migrated or rewritten. Production function application is pending owner action/SQL-editor access.
+
+
+## Atomic function installation — 11 October 2026
+
+Owner confirmed the reviewed SQL was installed. Both save_guest_atomic and submit_rsvp_atomic returned the expected validation errors for safe, deliberately invalid service-role probes; no records were changed. Anonymous client attempts were denied for both functions. Backend integration commit 98b3071 was pushed to main. Public default events remain wedding and reception. Local validation was 39 backend tests (including eight actual PostgreSQL function tests), 64 frontend tests and successful frontend build.
+
+## Editorial Photo Journal — 11 October 2026
+
+Gallery scope was reintroduced by the owner, who chose option 1. Public and invitation-aware gallery routes now present a featured opening photograph and two editorial chapters with varied compositions. The fullscreen viewer supports native focus trapping, Escape dismissal, arrow navigation and horizontal swipes. Full admins have a photo upload page with album/caption controls, source validation, browser photo optimization and publication retry.
+
+The existing public `wedding-photos` bucket and `photos` table are reused unchanged. Photos upload directly using Supabase signed upload tokens; the backend service-role key remains server-side. An administrator-bound, expiring HMAC intent authorizes publication of only the generated object path and metadata. Object MIME/size are checked before publication; retries use a stable photo primary key. No production sample photographs or test guest data were created. Unpublished objects from abandoned/failed uploads may require manual Storage cleanup.
+
+The public gallery is empty until the owner adds photos through `/admin/gallery`. Automated tests verify authorization boundaries, metadata validation, publication retry, album layouts, viewer state/scroll restoration and source photo optimization. Read-only local browser checks use repository image fixtures solely for layout verification. A real authenticated Storage upload remains an owner check after deployment.
+
+Gallery release validation: exact staged source passed 49 backend tests, 72 frontend tests and the production build (373.20 kB initial bundle). Gallery stylesheet has a non-blocking 202-byte warning above the 4 kB warning budget, below the 8 kB error limit. Browser fixture verification additionally passed at 320px with 44px chapter controls.

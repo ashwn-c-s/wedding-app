@@ -1,3 +1,136 @@
-<div>
-    <app-nav />
-</div>
+<app-nav [token]="token()" />
+<main>
+  <header class="journal-heading">
+    <p class="eyebrow">Ashwin &amp; Amritha · A photo journal</p>
+    <h1>A little collection<br />of <em>forever.</em></h1>
+    <p class="intro">
+      The days we’ll remember. The people we love.<br />The moments that make our story.
+    </p>
+    <span class="flourish" aria-hidden="true">✦</span>
+  </header>
+  <nav class="chapter-tabs" aria-label="Photo chapters">
+    <button type="button" [attr.aria-pressed]="album() === 'all'" (click)="album.set('all')">
+      All moments
+    </button>
+    <button type="button" [attr.aria-pressed]="album() === 'pre'" (click)="album.set('pre')">
+      Before the wedding <span>{{ count('pre') }}</span>
+    </button>
+    <button type="button" [attr.aria-pressed]="album() === 'post'" (click)="album.set('post')">
+      The celebration <span>{{ count('post') }}</span>
+    </button>
+  </nav>
+  @if (loading()) {
+    <div class="state" role="status">
+      <span class="flourish" aria-hidden="true">✦</span>
+      <p>Opening our photo journal…</p>
+    </div>
+  } @else if (error()) {
+    <div class="state">
+      <p role="alert">{{ error() }}</p>
+      <button type="button" class="pill" (click)="load()">Try again</button>
+    </div>
+  } @else if (!filtered().length) {
+    <section class="state empty">
+      <div class="empty-art" aria-hidden="true">
+        <span>✦</span><span>A &amp; A</span><span>✦</span>
+      </div>
+      <h2>
+        {{ photos().length ? 'This chapter is still unfolding.' : 'Our story is still unfolding.' }}
+      </h2>
+      <p>
+        {{
+          photos().length
+            ? 'Photographs from this chapter will appear here soon.'
+            : 'A place for our favourite memories. Photographs will appear here soon.'
+        }}
+      </p>
+    </section>
+  } @else {
+    @if (featured(); as photo) {
+      <figure class="featured">
+        <button
+          type="button"
+          class="photo-button"
+          [attr.aria-label]="'Open featured photo: ' + (photo.caption || 'Our favourite moment')"
+          (click)="open(photo)"
+        >
+          @if (!failed().has(photo.id)) {
+            <img
+              [src]="photo.url"
+              [alt]="photo.caption || 'A moment from our wedding story'"
+              fetchpriority="high"
+              (error)="imageFailed(photo.id)"
+            />
+          } @else {
+            <span class="unavailable">Photograph unavailable</span>
+          }
+          <span class="photo-hint">View photograph ↗</span>
+        </button>
+        <figcaption>
+          <span class="eyebrow">A moment to remember</span>
+          <p>{{ photo.caption || 'Some moments stay with us forever.' }}</p>
+        </figcaption>
+      </figure>
+    }
+    @for (chapter of chapters; track chapter.id) {
+      @if ((album() === 'all' || album() === chapter.id) && chapterPhotos(chapter.id).length) {
+        <section class="chapter" [attr.aria-labelledby]="'chapter-' + chapter.id">
+          <header class="chapter-heading">
+            <span class="chapter-number">{{ chapter.number }}</span>
+            <div>
+              <p class="eyebrow">Our story, in photographs</p>
+              <h2 [id]="'chapter-' + chapter.id">{{ chapter.title }}</h2>
+              <p>{{ chapter.note }}</p>
+            </div>
+          </header>
+          <div class="photo-story">
+            @for (photo of chapterPhotos(chapter.id); track photo.id; let i = $index) {
+              <figure
+                [class.wide]="i % 5 === 0"
+                [class.offset]="i % 5 === 2"
+                [class.landscape]="i % 5 === 3"
+                [class.portrait]="i % 5 === 1 || i % 5 === 4"
+              >
+                <button
+                  type="button"
+                  class="photo-button"
+                  [attr.aria-label]="
+                    'Open photo: ' + (photo.caption || chapter.title + ' photograph ' + (i + 1))
+                  "
+                  (click)="open(photo)"
+                >
+                  @if (!failed().has(photo.id)) {
+                    <img
+                      [src]="photo.url"
+                      [alt]="photo.caption || chapter.title + ' photograph'"
+                      loading="lazy"
+                      decoding="async"
+                      (error)="imageFailed(photo.id)"
+                    />
+                  } @else {
+                    <span class="unavailable">Photograph unavailable</span>
+                  }
+                  <span class="photo-hint">View photograph ↗</span>
+                </button>
+                <figcaption>
+                  <span class="photo-number">{{ (i + 1).toString().padStart(2, '0') }}</span>
+                  <p>{{ photo.caption || 'A little piece of our forever.' }}</p>
+                </figcaption>
+              </figure>
+            }
+          </div>
+        </section>
+      }
+    }
+    <p class="closing">With love, <em>Ashwin &amp; Amritha</em></p>
+  }
+</main>
+<app-footer [token]="token()" />
+<app-photo-viewer
+  #viewer
+  [photo]="selected()"
+  [count]="filtered().length"
+  [index]="index()"
+  (step)="move($event)"
+  (dismiss)="closed()"
+/>

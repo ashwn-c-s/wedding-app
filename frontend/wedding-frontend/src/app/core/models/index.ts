@@ -34,7 +34,7 @@ export interface RsvpStatus {
 
 export interface Photo {
   id: string;
-  storage_path: string;
+  url: string;
   caption: string | null;
   album_type: 'pre' | 'post';
   created_at: string;

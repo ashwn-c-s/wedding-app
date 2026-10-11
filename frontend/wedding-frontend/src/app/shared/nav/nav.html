@@ -8,6 +8,7 @@
       }
       <a [routerLink]="token ? ['/invite', token, 'venues'] : ['/venues']" routerLinkActive="text-terracotta" class="text-sm tracking-wide text-forest hover:text-terracotta transition-colors">Venues</a>
       <a [routerLink]="token ? ['/invite', token, 'about'] : ['/about']" routerLinkActive="text-terracotta" class="text-sm tracking-wide text-forest hover:text-terracotta transition-colors">About us</a>
+      <a [routerLink]="token ? ['/invite', token, 'gallery'] : ['/gallery']" routerLinkActive="text-terracotta" class="text-sm tracking-wide text-forest hover:text-terracotta transition-colors">Gallery</a>
     </div>
 
     <!-- Hamburger (mobile only) -->
@@ -28,6 +29,7 @@
       }
       <a [routerLink]="token ? ['/invite', token, 'venues'] : ['/venues']" (click)="closeMenu()" class="text-base text-forest">Venues</a>
       <a [routerLink]="token ? ['/invite', token, 'about'] : ['/about']" (click)="closeMenu()" class="text-base text-forest">About us</a>
+      <a [routerLink]="token ? ['/invite', token, 'gallery'] : ['/gallery']" (click)="closeMenu()" class="text-base text-forest">Gallery</a>
     </div>
   }
 </nav>

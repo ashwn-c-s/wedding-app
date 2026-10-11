@@ -1,0 +1,92 @@
+<main class="admin-page">
+  <app-admin-nav />
+  <h1>Our photo journal</h1>
+  <p>
+    Add photos to the Before the wedding or The celebration chapter. The newest photo opens the
+    journal.
+  </p>
+  <a routerLink="/gallery" target="_blank" rel="noopener">View the gallery ↗</a>
+  <p class="hint">
+    Published photos are visible to anyone visiting the gallery. Upload only photos you want to
+    share.
+  </p>
+  @if (error()) {
+    <p class="error" role="alert">{{ error() }}</p>
+  }
+  @if (notice()) {
+    <p class="success" role="status">{{ notice() }}</p>
+  }
+  <form class="panel" (ngSubmit)="save(photoInput)">
+    <h2>Add a photograph</h2>
+    <fieldset [disabled]="busy()">
+      <label
+        >Photo
+        <input
+          #photoInput
+          type="file"
+          accept="image/jpeg,image/png,image/webp"
+          (change)="select($event)"
+          [disabled]="!!pending"
+      /></label>
+      <p class="hint">JPEG, PNG or WebP · up to 15 MB. One photo at a time. Photos are optimized for the web at up to 2,400 pixels.</p>
+      @if (preview()) {
+        <img class="upload-preview" [src]="preview()" alt="Selected photo preview" />
+      }
+      <label
+        >Chapter
+        <select name="album" [(ngModel)]="album" [disabled]="!!pending">
+          <option value="pre">Before the wedding</option>
+          <option value="post">The celebration</option>
+        </select></label
+      >
+      <label
+        >Caption
+        <textarea
+          name="caption"
+          [(ngModel)]="caption"
+          maxlength="300"
+          rows="2"
+          [disabled]="!!pending"
+          placeholder="A little story behind this moment"
+        ></textarea>
+      </label>
+      <button type="submit" [disabled]="!file || busy()">
+        {{ busy() ? stage() : pending ? 'Retry publishing' : 'Publish photo' }}
+      </button>
+      @if (file) {
+        <button type="button" class="secondary" (click)="clear(); photoInput.value = ''">
+          Clear selection
+        </button>
+      }
+      @if (pending) {
+        <p class="hint">
+          The photo is uploaded. Retry publishing to finish without uploading it again.
+        </p>
+      }
+    </fieldset>
+  </form>
+  <section aria-labelledby="published-title">
+    <h2 id="published-title">Published photographs · {{ photos().length }}</h2>
+    @if (loading()) {
+      <p role="status">Loading photographs…</p>
+    } @else if (!photos().length) {
+      <p>The journal is waiting for its first photograph.</p>
+    }
+    <div class="published">
+      @for (photo of photos(); track photo.id) {
+        <figure>
+          <img [src]="photo.url" [alt]="photo.caption || 'Wedding photograph'" loading="lazy" />
+          <figcaption>
+            <strong>{{
+              photo.album_type === 'pre' ? 'Before the wedding' : 'The celebration'
+            }}</strong>
+            <p>{{ photo.caption || 'No caption' }}</p>
+          </figcaption>
+        </figure>
+      }
+    </div>
+    @if (error() && !busy()) {
+      <button type="button" class="secondary" (click)="load()">Refresh gallery</button>
+    }
+  </section>
+</main>

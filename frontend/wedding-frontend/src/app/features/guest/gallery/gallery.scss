@@ -1,0 +1,332 @@
+:host {
+  display: block;
+  background: #faf5e9;
+  color: #214f38;
+  font-family: Georgia, serif;
+}
+main {
+  max-width: 1240px;
+  margin: auto;
+  padding: 0 48px;
+}
+button {
+  font: inherit;
+  cursor: pointer;
+}
+button:focus-visible {
+  outline: 3px solid #b98632;
+  outline-offset: 5px;
+}
+.journal-heading {
+  text-align: center;
+  padding: 70px 0 35px;
+}
+.eyebrow {
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  font:
+    11px Arial,
+    sans-serif;
+}
+.journal-heading h1 {
+  font-size: clamp(44px, 7vw, 88px);
+  font-weight: 400;
+  line-height: 1.04;
+  letter-spacing: -0.045em;
+  margin: 25px 0;
+}
+.journal-heading h1 em {
+  color: #9c6739;
+  font-weight: 400;
+}
+.intro {
+  font:
+    14px/1.9 Arial,
+    sans-serif;
+  color: #69725e;
+}
+.flourish {
+  display: block;
+  color: #b98632;
+  font-size: 24px;
+  margin: 24px auto;
+}
+.chapter-tabs {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 10px 0 36px;
+}
+.chapter-tabs button {
+  min-height: 44px;
+  border: 1px solid #d8d1ba;
+  border-radius: 30px;
+  background: transparent;
+  color: #214f38;
+  padding: 12px 20px;
+  font:
+    12px Arial,
+    sans-serif;
+}
+.chapter-tabs button[aria-pressed='true'] {
+  background: #214f38;
+  border-color: #214f38;
+  color: #faf5e9;
+}
+.chapter-tabs span {
+  opacity: 0.7;
+  margin-left: 5px;
+}
+.featured {
+  margin: 0 0 90px;
+}
+.photo-button {
+  display: block;
+  width: 100%;
+  position: relative;
+  border: 0;
+  padding: 0;
+  background: #e8e0cc;
+  overflow: hidden;
+  color: #214f38;
+}
+.photo-button img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+  transition: transform 0.7s;
+}
+.photo-button:hover img {
+  transform: scale(1.025);
+}
+.featured .photo-button {
+  height: clamp(360px, 55vw, 650px);
+  border-radius: clamp(65px, 12vw, 120px) clamp(65px, 12vw, 120px) 4px 4px;
+}
+.photo-hint {
+  position: absolute;
+  bottom: 18px;
+  right: 18px;
+  border-radius: 30px;
+  background: #faf5e9ed;
+  padding: 10px 15px;
+  font:
+    11px Arial,
+    sans-serif;
+}
+.featured figcaption {
+  text-align: center;
+  padding: 28px 16px;
+}
+.featured figcaption p {
+  font-size: clamp(21px, 2.5vw, 24px);
+  margin: 10px 0;
+  overflow-wrap: anywhere;
+}
+.chapter {
+  margin-bottom: 90px;
+}
+.chapter-heading {
+  display: flex;
+  align-items: center;
+  gap: 30px;
+  border-top: 1px solid #d8d1ba;
+  padding: 35px 0 45px;
+}
+.chapter-number {
+  font-size: clamp(45px, 5vw, 60px);
+  color: #b5a679;
+  font-style: italic;
+}
+.chapter-heading > div {
+  min-width: 0;
+}
+.chapter-heading h2 {
+  line-height: 1.15;
+  font-size: clamp(30px, 4vw, 48px);
+  font-weight: 400;
+  margin: 8px 0;
+}
+.chapter-heading p:last-child {
+  color: #69725e;
+  font:
+    13px Arial,
+    sans-serif;
+}
+.photo-story {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 50px 70px;
+  align-items: start;
+}
+.photo-story figure {
+  margin: 0;
+  min-width: 0;
+}
+.wide {
+  grid-column: 1/-1;
+  width: 88%;
+  justify-self: center;
+}
+.wide .photo-button {
+  aspect-ratio: 16/9;
+}
+.portrait .photo-button {
+  aspect-ratio: 4/5;
+}
+.offset {
+  padding-top: 100px;
+}
+.offset .photo-button {
+  aspect-ratio: 1;
+}
+.landscape .photo-button {
+  aspect-ratio: 5/4;
+}
+.photo-story .photo-button {
+  border-radius: 3px;
+}
+.photo-story figcaption {
+  display: flex;
+  gap: 15px;
+  padding-top: 15px;
+  align-items: baseline;
+}
+.photo-number {
+  font:
+    11px Arial,
+    sans-serif;
+  color: #9c6739;
+}
+.photo-story figcaption p {
+  font-size: 17px;
+  margin: 0;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+.unavailable {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+  min-height: 200px;
+  font:
+    14px Arial,
+    sans-serif;
+}
+.closing {
+  text-align: center;
+  font:
+    11px Arial,
+    sans-serif;
+  letter-spacing: 0.08em;
+  margin: 60px 0 80px;
+}
+.closing em {
+  display: block;
+  font:
+    28px Georgia,
+    serif;
+  margin: 14px;
+}
+.state {
+  text-align: center;
+  min-height: 320px;
+  padding: 55px 20px 90px;
+}
+.state p {
+  font:
+    14px/1.8 Arial,
+    sans-serif;
+  color: #69725e;
+}
+.state h2 {
+  font-size: 28px;
+  font-weight: 400;
+}
+.empty-art {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 22px;
+  height: 100px;
+  color: #9c6739;
+  font:
+    italic 40px Georgia,
+    serif;
+}
+.empty-art span:first-child,
+.empty-art span:last-child {
+  font-size: 18px;
+}
+.pill {
+  border: 0;
+  border-radius: 30px;
+  background: #214f38;
+  color: #faf5e9;
+  padding: 12px 24px;
+}
+@media (max-width: 650px) {
+  main {
+    padding: 0 20px;
+  }
+  .journal-heading {
+    padding: 40px 0 20px;
+  }
+  .eyebrow {
+    font-size: 9px;
+    letter-spacing: 0.14em;
+  }
+  .chapter-tabs {
+    gap: 8px;
+    padding-bottom: 25px;
+  }
+  .chapter-tabs button {
+    padding: 10px 12px;
+    font-size: 11px;
+  }
+  .featured {
+    margin-bottom: 35px;
+  }
+  .chapter {
+    margin-bottom: 45px;
+  }
+  .chapter-heading {
+    gap: 20px;
+    padding: 25px 0;
+  }
+  .photo-story {
+    gap: 28px 16px;
+  }
+  .wide {
+    width: 100%;
+  }
+  .offset {
+    padding-top: 45px;
+  }
+  .photo-story figcaption {
+    gap: 7px;
+  }
+  .photo-story figcaption p {
+    font-size: 14px;
+  }
+  .photo-hint {
+    bottom: 10px;
+    right: 10px;
+    font-size: 9px;
+    padding: 8px 10px;
+  }
+  .photo-story .photo-hint {
+    display: none;
+  }
+  .closing {
+    margin: 40px 0 55px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .photo-button img {
+    transition: none;
+  }
+}

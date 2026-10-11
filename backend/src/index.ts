@@ -3,6 +3,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import inviteRouter from './routes/invite';
 import adminRouter from './routes/admin';
+import { galleryRouter, adminGalleryRouter } from './routes/gallery';
 
 dotenv.config();
 const app = express();
@@ -15,6 +16,8 @@ app.use('/api',(_req,res,next)=>{
 });
 app.use(express.json({limit:'600kb'}));
 app.use('/api/invite',inviteRouter);
+app.use('/api/gallery',galleryRouter);
+app.use('/api/admin/gallery',adminGalleryRouter);
 app.use('/api/admin',adminRouter);
 app.get('/api/health',(_req,res)=>{res.json({status:'ok'});});
 app.use((error:unknown,_req:Request,res:Response,_next:NextFunction)=>{

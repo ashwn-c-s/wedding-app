@@ -1,0 +1,57 @@
+<dialog
+  #viewer
+  class="viewer"
+  aria-label="Photograph viewer"
+  (close)="dismiss.emit()"
+  (keydown)="keys($event)"
+>
+  <div class="viewer-top">
+    <span>Our photo journal</span
+    ><button
+      autofocus
+      type="button"
+      class="viewer-button"
+      aria-label="Close photograph viewer"
+      (click)="close()"
+    >
+      ✕
+    </button>
+  </div>
+  @if (photo(); as photo) {
+    <div class="viewer-stage" (touchstart)="touchStart($event)" (touchend)="touchEnd($event)">
+      @if (!failed().has(photo.id)) {
+        <img
+          [src]="photo.url"
+          [alt]="photo.caption || 'Wedding photograph'"
+          (error)="imageFailed(photo.id)"
+        />
+      } @else {
+        <p>Photograph unavailable</p>
+      }
+    </div>
+    <div class="viewer-bottom">
+      <button
+        type="button"
+        class="viewer-button"
+        aria-label="Previous photograph"
+        [disabled]="count() < 2"
+        (click)="step.emit(-1)"
+      >
+        ←
+      </button>
+      <div aria-live="polite">
+        <p>{{ photo.caption || 'A little piece of our forever.' }}</p>
+        <span>{{ index()! + 1 }} / {{ count() }}</span>
+      </div>
+      <button
+        type="button"
+        class="viewer-button"
+        aria-label="Next photograph"
+        [disabled]="count() < 2"
+        (click)="step.emit(1)"
+      >
+        →
+      </button>
+    </div>
+  }
+</dialog>
