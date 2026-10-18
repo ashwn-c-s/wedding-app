@@ -55,3 +55,7 @@ Final local results: 65 backend tests and 82 frontend tests pass. The frontend p
 The owner completed review and authorized the production rollout. Fresh service-role probes show both new tables are still absent (PGRST205), and the new RPC is absent (PGRST202). No direct PostgreSQL or Supabase management credentials are configured in the project. Browser access is waiting on macOS Computer Use permissions. Applying the already-reviewed migration therefore requires an authenticated dashboard session or owner execution in Supabase SQL Editor; it is an access dependency, not another design approval.
 
 Fresh validation on 18 October: 65 backend tests, 82 frontend tests and the production build pass. A reusable, non-mutating installation/privacy check is available at `backend/scripts/verify-guest-tags.cjs`. Run it after installation before pushing the application release.
+
+## Migration confirmed — 18 October 2026
+
+The owner reported successful SQL installation. The non-mutating verification script passed: both tables are available, invalid service-role RPC input returns INVALID_GUEST, and anonymous table/RPC access is denied. Implementation commit `c538133` passed the exact-source validation noted above and is proceeding to the authorized production deployment. No production guest or tag records were changed during verification.

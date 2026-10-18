@@ -51,3 +51,7 @@ Owner review/application of `database/guest-tags.sql` is required before deployi
 ## Guest tags production rollout — 18 October 2026
 
 Owner review is complete and production deployment is authorized. Fresh validation passes: 65 backend tests, 82 frontend tests, successful production frontend build. Database probes show the tag tables and versioned RPC are not yet installed. Production application deployment is held until the approved SQL can be applied through a database-admin connection or authenticated dashboard. `backend/scripts/verify-guest-tags.cjs` verifies installation and anonymous access denial without modifying guest records.
+
+## Guest-tag migration verified — 18 October 2026
+
+The owner applied the reviewed SQL. `backend/scripts/verify-guest-tags.cjs` confirmed both private tables exist, the service-role RPC rejects deliberately invalid input before writes, and anonymous table reads/RPC execution are denied. No guest/tag records were created or edited during verification. Implementation commit `c538133` is ready for the authorized production deployment. Invitation recovery remains deferred in the backlog.
