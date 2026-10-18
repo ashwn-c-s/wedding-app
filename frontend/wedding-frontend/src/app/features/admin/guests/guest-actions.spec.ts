@@ -82,7 +82,11 @@ describe('Guest list actions and identity', () => {
     expect(buttons[0].getAttribute('aria-pressed')).toBe('false');
     expect(root.querySelector('.guest-list')?.classList.contains('view-list')).toBe(true);
     expect(root.querySelectorAll('.guest-table tbody tr')).toHaveLength(1);
-    expect(root.querySelectorAll('.guest-table .icon-action')).toHaveLength(4);
+    expect(root.querySelectorAll('.guest-table .icon-action')).toHaveLength(1);
+    expect([...root.querySelectorAll('.guest-table th')].map(th => th.textContent?.trim())).toEqual(['Name', 'Phone', 'Party size', 'Invited events', 'Edit']);
+    expect([...root.querySelectorAll('.guest-table tbody tr:first-child td')].map(td => td.textContent?.trim())).toEqual(['Anita', '+919876543210', '2', 'Wedding Ceremony', '']);
+    expect(root.querySelector('.guest-tags')).toBeNull();
+    expect(root.querySelector('.guest-list')?.getAttribute('tabindex')).toBe('0');
     expect(fixture.componentInstance.search()).toBe('Anita');
     expect(fixture.componentInstance.tagFilter()).toBe('office');
     expect(fixture.componentInstance.draft?.name).toBe('Draft name');
@@ -90,6 +94,8 @@ describe('Guest list actions and identity', () => {
     fixture.detectChanges();
     expect(buttons[0].getAttribute('aria-pressed')).toBe('true');
     expect(root.querySelector('.guest-list')?.classList.contains('view-cards')).toBe(true);
+    expect(root.querySelectorAll('.guest-table .icon-action')).toHaveLength(4);
+    expect(root.querySelector('.guest-tags')?.textContent).toContain('Office friends');
     fixture.componentInstance.search.set('No matching guest');
     buttons[1].click();
     fixture.detectChanges();
@@ -98,8 +104,6 @@ describe('Guest list actions and identity', () => {
 
   it('copies the same complete invitation as WhatsApp and announces success', async () => {
     const fixture = await render();
-    fixture.componentInstance.viewMode.set('list');
-    fixture.detectChanges();
     const writeText = vi.fn().mockResolvedValue(undefined);
     vi.stubGlobal('navigator', {clipboard: {writeText}});
     fixture.nativeElement.querySelector('[title="Copy invitation"]').click();
@@ -110,6 +114,17 @@ describe('Guest list actions and identity', () => {
     expect(writeText.mock.calls[0][0]).toContain('Wedding Ceremony');
     expect(writeText.mock.calls[0][0]).toContain('10:30 am IST');
     expect(fixture.nativeElement.querySelector('[role="status"]').textContent).toContain('Invitation copied for Anita.');
+  });
+
+  it('opens the guest editor from the list pencil button', async () => {
+    const fixture = await render();
+    fixture.componentInstance.viewMode.set('list');
+    fixture.detectChanges();
+    fixture.nativeElement.querySelector('.guest-table [title="Edit guest"]').click();
+    fixture.detectChanges();
+    await fixture.whenStable();
+    expect(fixture.componentInstance.editingId).toBe(guest.id);
+    expect(fixture.nativeElement.querySelector('input[name="guestName"]').value).toBe(guest.name);
   });
 
   it('reports clipboard failure without claiming the invitation was copied', async () => {

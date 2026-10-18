@@ -27,7 +27,7 @@
 .whatsapp-action { background: #214f38; border-color: #214f38; color: #fffaf0; }
 .whatsapp-action:hover { background: #163d29; }
 .mobile-label { display: none; }
- .guest-list-toolbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .5rem; margin: .5rem 0; }
+.guest-list-toolbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .5rem; margin: .5rem 0; }
 .view-toggle { display: inline-flex; gap: .25rem; padding: .25rem; border: 1px solid #a9b49c; border-radius: .7rem; background: #fffaf0; }
 .view-toggle button { display: inline-flex; align-items: center; justify-content: center; gap: .4rem; min-height: 44px; margin: 0; padding: .5rem .75rem; background: transparent; color: #214f38; }
 .view-toggle button[aria-pressed="true"] { background: #214f38; color: #fffaf0; }
@@ -48,22 +48,12 @@
 .view-cards .guest-table td { display: block; padding: 0; border: 0; min-width: 0; }
 .view-cards .mobile-label { display: block; color: #526148; font-size: .75rem; margin-bottom: .2rem; }
 .view-cards .guest-actions-cell { padding-top: .75rem !important; border-top: 1px solid #d9cbaa !important; }
-@media (max-width: 700px) {
-  .view-list { overflow: visible; }
-  .view-list .guest-table, .view-list .guest-table tbody { display: block; }
-  .view-list .guest-table thead {
-    position: absolute; width: 1px; height: 1px; padding: 0;
-    overflow: hidden; clip-path: inset(50%); white-space: nowrap;
-  }
-  .view-list .guest-table tbody tr {
-    display: grid; grid-template-columns: minmax(0, 1fr) 96px;
-    grid-template-areas: "details actions" "party actions" "events events";
-    gap: .5rem .75rem; padding: .85rem 0; border-bottom: 1px solid #c8bb9e;
-  }
-  .view-list .guest-table td { display: block; padding: 0; border: 0; min-width: 0; }
-  .view-list .guest-details { grid-area: details; }
-  .view-list .guest-party { grid-area: party; }
-  .view-list .guest-events { grid-area: events; }
-  .view-list .guest-actions-cell { grid-area: actions; }
-  .view-list .mobile-label { display: inline; font-size: .75rem; color: #526148; margin-right: .4rem; }
+.view-list { overflow-x: auto; }
+.view-list:focus-visible { outline: 3px solid #94412e; outline-offset: 2px; }
+.view-list .guest-table { min-width: 620px; }
+.view-list .guest-table th, .view-list .guest-table td { vertical-align: middle; }
+.view-list .guest-phone-cell { white-space: nowrap; }
+.view-list .guest-table th:last-child, .view-list .guest-actions-cell {
+  position: sticky; right: 0; background: #f7ecd5; z-index: 1;
 }
+.view-list .guest-actions-cell { width: 44px; }

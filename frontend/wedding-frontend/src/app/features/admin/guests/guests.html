@@ -142,14 +142,17 @@
         </button>
       </div>
     </div>
-    <div class="table-wrap guest-list" [class.view-cards]="viewMode() === 'cards'" [class.view-list]="viewMode() === 'list'">
+    <div class="table-wrap guest-list" [class.view-cards]="viewMode() === 'cards'" [class.view-list]="viewMode() === 'list'" [attr.role]="viewMode() === 'list' ? 'region' : null" [attr.aria-label]="viewMode() === 'list' ? 'Guest list; scroll horizontally to see all columns' : null" [attr.tabindex]="viewMode() === 'list' ? 0 : null">
       <table class="guest-table" role="table" aria-label="Guests and invitations">
         <thead role="rowgroup">
           <tr role="row">
-            <th scope="col" role="columnheader">Guest</th>
+            <th scope="col" role="columnheader">{{ viewMode() === 'list' ? 'Name' : 'Guest' }}</th>
+            @if (viewMode() === 'list') {
+              <th scope="col" role="columnheader">Phone</th>
+            }
             <th scope="col" role="columnheader">Party size</th>
             <th scope="col" role="columnheader">Invited events</th>
-            <th scope="col" role="columnheader">Actions</th>
+            <th scope="col" role="columnheader">{{ viewMode() === 'list' ? 'Edit' : 'Actions' }}</th>
           </tr>
         </thead>
         <tbody role="rowgroup">
@@ -157,6 +160,7 @@
             <tr role="row">
               <td class="guest-details" role="cell">
                 <strong class="guest-name">{{ guest.name }}</strong>
+                @if (viewMode() === 'cards') {
                 <span class="guest-phone">{{ guest.phone }}</span>
                 <div class="guest-tags" aria-label="Guest tags">
                   @for(tag of guest.tags || []; track tag.id) {
@@ -165,11 +169,16 @@
                     <span class="hint">Untagged</span>
                   }
                 </div>
+                }
               </td>
-              <td class="guest-party" role="cell"><span class="mobile-label" aria-hidden="true">Party size</span>{{ guest.party_size }}</td>
-              <td class="guest-events" role="cell"><span class="mobile-label" aria-hidden="true">Invited events</span>{{ eventNames(guest) }}</td>
+              @if (viewMode() === 'list') {
+                <td class="guest-phone-cell" role="cell">{{ guest.phone }}</td>
+              }
+              <td class="guest-party" role="cell">@if (viewMode() === 'cards') {<span class="mobile-label" aria-hidden="true">Party size</span>}{{ guest.party_size }}</td>
+              <td class="guest-events" role="cell">@if (viewMode() === 'cards') {<span class="mobile-label" aria-hidden="true">Invited events</span>}{{ eventNames(guest) }}</td>
               <td class="guest-actions-cell" role="cell">
                 <div class="guest-actions" role="group" [attr.aria-label]="'Actions for ' + guest.name">
+                  @if (viewMode() === 'cards') {
                   <button type="button" class="icon-action" (click)="copy(guest)" [attr.aria-label]="'Copy invitation for ' + guest.name" title="Copy invitation">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="7" y="4" width="10" height="4" rx="1"/><path d="M7 6H5v15h14V6h-2M9 12h6m-6 4h6"/></svg>
                   </button>
@@ -179,6 +188,7 @@
                   <a class="icon-action" [href]="link(guest)" target="_blank" rel="noopener noreferrer" [attr.aria-label]="'Open invitation for ' + guest.name + ' (opens in a new tab)'" title="Open invitation">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="m10 13 4-4m-6 6-1 1a3.5 3.5 0 0 1-5-5l4-4a3.5 3.5 0 0 1 5 0m2 2 1-1a3.5 3.5 0 0 1 5 5l-4 4a3.5 3.5 0 0 1-5 0" transform="translate(1 1)"/></svg>
                   </a>
+                  }
                   <button type="button" class="icon-action" (click)="edit(guest)" [disabled]="saving() || importing()" [attr.aria-label]="'Edit guest ' + guest.name" title="Edit guest">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="m16 3 5 5-12 12-6 1 1-6ZM13 6l5 5M4 15l5 5"/></svg>
                   </button>
@@ -186,7 +196,7 @@
               </td>
             </tr>
           } @empty {
-            <tr role="row"><td role="cell" colspan="4">No guests match your search and tag filter.</td></tr>
+            <tr role="row"><td role="cell" [attr.colspan]="viewMode() === 'list' ? 5 : 4">No guests match your search and tag filter.</td></tr>
           }
         </tbody>
       </table>

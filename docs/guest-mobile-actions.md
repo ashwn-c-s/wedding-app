@@ -19,3 +19,9 @@ Limitation: visual mobile/browser and manual screen-reader checks were unavailab
 Added an accessible Cards/List toggle above the guest collection. Cards are the default on every screen size; list mode uses a table on desktop and compact rows below 700px, keeping all four 44-pixel actions visible without requiring a wide mobile table. Both views share the same guest rows, filters, sharing actions and editor state. The toggle exposes its selected state with aria-pressed. The selection lasts for the current page session.
 
 Validation: all 91 frontend tests pass, including switching both directions while preserving filters and an unsaved draft, empty results in list mode, and copying an invitation from list mode. Production build passes with the same existing gallery stylesheet warning. The earlier visual browser verification limitation remains.
+
+## List table clarification
+
+List view now shows exactly five columns: Name, Phone, Party size, Invited events and Edit. It renders only the pencil action and omits tag chips; Cards retain stacked identity details and all sharing actions. List remains a table at mobile widths, inside a keyboard-focusable horizontal scroll region with the edit column fixed at the right edge using sticky positioning.
+
+Validation: 92 frontend tests pass. Tests verify the five headers and matching cell values, a single edit action per list row, editing from the pencil, preserved filters/draft across toggles, and four sharing/edit actions with tags when returning to Cards. Production build passes with the pre-existing gallery budget warning. Manual mobile visual verification remains unavailable.
