@@ -12,3 +12,10 @@
 Verification: 90 frontend tests pass. Rendered component tests verify identity ordering, named actions, links, opening the editor, clipboard content, success announcement and failed-copy feedback. Production Angular build succeeds with only the pre-existing gallery stylesheet budget warning. No database changes.
 
 Limitation: visual mobile/browser and manual screen-reader checks were unavailable because Computer Use reported that the Mac is locked and exposed no browser. Responsive behavior is source-supported; automated DOM checks do not prove visual rendering.
+
+
+## Card/list view toggle
+
+Added an accessible Cards/List toggle above the guest collection. Cards are the default on every screen size; list mode uses a table on desktop and compact rows below 700px, keeping all four 44-pixel actions visible without requiring a wide mobile table. Both views share the same guest rows, filters, sharing actions and editor state. The toggle exposes its selected state with aria-pressed. The selection lasts for the current page session.
+
+Validation: all 91 frontend tests pass, including switching both directions while preserving filters and an unsaved draft, empty results in list mode, and copying an invitation from list mode. Production build passes with the same existing gallery stylesheet warning. The earlier visual browser verification limitation remains.

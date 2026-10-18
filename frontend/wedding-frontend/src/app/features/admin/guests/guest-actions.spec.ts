@@ -65,8 +65,41 @@ describe('Guest list actions and identity', () => {
     expect(fixture.componentInstance.editingId).toBe('guest-id');
   });
 
+  it('switches between cards and list without losing filters, guest actions or the edit draft', async () => {
+    const fixture = await render();
+    const root: HTMLElement = fixture.nativeElement;
+    const buttons = root.querySelectorAll<HTMLButtonElement>('.view-toggle button');
+    expect(buttons[0].getAttribute('aria-pressed')).toBe('true');
+    expect(root.querySelector('.guest-list')?.classList.contains('view-cards')).toBe(true);
+    fixture.componentInstance.search.set('Anita');
+    fixture.componentInstance.tagFilter.set('office');
+    fixture.componentInstance.edit(guest);
+    fixture.componentInstance.draft!.name = 'Draft name';
+    buttons[1].click();
+    fixture.detectChanges();
+    await fixture.whenStable();
+    expect(buttons[1].getAttribute('aria-pressed')).toBe('true');
+    expect(buttons[0].getAttribute('aria-pressed')).toBe('false');
+    expect(root.querySelector('.guest-list')?.classList.contains('view-list')).toBe(true);
+    expect(root.querySelectorAll('.guest-table tbody tr')).toHaveLength(1);
+    expect(root.querySelectorAll('.guest-table .icon-action')).toHaveLength(4);
+    expect(fixture.componentInstance.search()).toBe('Anita');
+    expect(fixture.componentInstance.tagFilter()).toBe('office');
+    expect(fixture.componentInstance.draft?.name).toBe('Draft name');
+    buttons[0].click();
+    fixture.detectChanges();
+    expect(buttons[0].getAttribute('aria-pressed')).toBe('true');
+    expect(root.querySelector('.guest-list')?.classList.contains('view-cards')).toBe(true);
+    fixture.componentInstance.search.set('No matching guest');
+    buttons[1].click();
+    fixture.detectChanges();
+    expect(root.querySelector('.guest-table tbody')?.textContent).toContain('No guests match');
+  });
+
   it('copies the same complete invitation as WhatsApp and announces success', async () => {
     const fixture = await render();
+    fixture.componentInstance.viewMode.set('list');
+    fixture.detectChanges();
     const writeText = vi.fn().mockResolvedValue(undefined);
     vi.stubGlobal('navigator', {clipboard: {writeText}});
     fixture.nativeElement.querySelector('[title="Copy invitation"]').click();

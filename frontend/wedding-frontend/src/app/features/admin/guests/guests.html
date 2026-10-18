@@ -129,8 +129,20 @@
   @if (loading()) {
     <p role="status">Loading guests…</p>
   } @else {
-    <button class="secondary" (click)="load()">Refresh</button>
-    <div class="table-wrap guest-list">
+    <div class="guest-list-toolbar">
+      <button type="button" class="secondary" (click)="load()">Refresh</button>
+      <div class="view-toggle" role="group" aria-label="Guest view">
+        <button type="button" [attr.aria-pressed]="viewMode() === 'cards'" (click)="viewMode.set('cards')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true" focusable="false"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+          Cards
+        </button>
+        <button type="button" [attr.aria-pressed]="viewMode() === 'list'" (click)="viewMode.set('list')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true" focusable="false"><path d="M8 5h13M8 12h13M8 19h13M3 5h.01M3 12h.01M3 19h.01"/></svg>
+          List
+        </button>
+      </div>
+    </div>
+    <div class="table-wrap guest-list" [class.view-cards]="viewMode() === 'cards'" [class.view-list]="viewMode() === 'list'">
       <table class="guest-table" role="table" aria-label="Guests and invitations">
         <thead role="rowgroup">
           <tr role="row">

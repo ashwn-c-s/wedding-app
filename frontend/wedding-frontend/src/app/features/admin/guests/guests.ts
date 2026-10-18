@@ -27,6 +27,7 @@ export class Guests {
     }, { injector: this.injector });
   }
   guests = signal<AdminGuest[]>([]);
+  viewMode = signal<'cards' | 'list'>('cards');
   search = signal('');
   tagFilter = signal('');
   tags = signal<GuestTag[]>([]);
