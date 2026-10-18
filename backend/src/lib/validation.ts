@@ -8,7 +8,7 @@ export interface Rsvp { guest_id: string; event_id: string; attending: boolean; 
 export function validateGuest(body: unknown): {name:string;phone:string;party_size:number;event_ids:string[]} {
   if (!body || typeof body !== 'object' || Array.isArray(body)) throw new Error('Invalid guest details');
   const input = body as Record<string,unknown>;
-  if (Object.keys(input).some(key=>!['name','phone','party_size','event_ids'].includes(key))) throw new Error('Unsupported guest field');
+  if (Object.keys(input).some(key=>!['name','phone','party_size','event_ids','tag_ids','new_tags'].includes(key))) throw new Error('Unsupported guest field');
   if (typeof input.name !== 'string' || !input.name.trim() || input.name.trim().length>200) throw new Error('Enter a name of at most 200 characters');
   if (typeof input.phone !== 'string' || !input.phone.trim() || input.phone.trim().length>50) throw new Error('Enter a phone number of at most 50 characters');
   if (!Number.isSafeInteger(input.party_size) || (input.party_size as number)<1 || (input.party_size as number)>1000) throw new Error('Party size must be between 1 and 1000');

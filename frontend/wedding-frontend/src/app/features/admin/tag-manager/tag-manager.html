@@ -1,0 +1,27 @@
+<button type="button" (click)="open()" [disabled]="!catalogue().length">Manage tags</button>
+<dialog #dialog aria-labelledby="tag-manager-title" (cancel)="busy() && $event.preventDefault()">
+  <h2 id="tag-manager-title">Manage tags</h2>
+  <form (ngSubmit)="save()">
+    <fieldset [disabled]="busy()">
+      <label
+        >Tag<select name="tag" [ngModel]="selected" (ngModelChange)="select($event)">
+          @for (tag of catalogue(); track tag.id) {
+            <option [value]="tag.id">{{ tag.name }}</option>
+          }
+        </select></label
+      >
+      <label>Tag name<input name="name" [(ngModel)]="name" maxlength="40" required /></label>
+      <p>
+        This rename updates the label for {{ count() }} {{ count() === 1 ? 'guest' : 'guests' }}.
+        Their invitations and responses stay the same.
+      </p>
+      @if (error()) {
+        <p role="alert" class="error">{{ error() }}</p>
+      }
+      <div class="actions">
+        <button type="submit">{{ busy() ? 'Saving…' : 'Save rename' }}</button
+        ><button type="button" (click)="close()">Cancel</button>
+      </div>
+    </fieldset>
+  </form>
+</dialog>

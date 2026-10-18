@@ -93,3 +93,11 @@ The public gallery is empty until the owner adds photos through `/admin/gallery`
 Gallery release validation: exact staged source passed 49 backend tests, 72 frontend tests and the production build (373.20 kB initial bundle). Gallery stylesheet has a non-blocking 202-byte warning above the 4 kB warning budget, below the 8 kB error limit. Browser fixture verification additionally passed at 320px with 44px chapter controls.
 
 Gallery implementation commit 89d0644 deployed successfully to both Vercel projects. Live checks: `/api/gallery` returned an empty photo list, anonymous upload requests returned HTTP 401, `/gallery` rendered without browser errors or mobile horizontal overflow, and `/admin/gallery` redirected anonymous visitors to sign-in while preserving the destination. A final CSS correction gives the mobile empty-state heading explicit line spacing. No production photo upload was performed.
+
+## Guest tags implementation — 12 October 2026
+
+Guest tags were approved and implemented locally. Multiple private labels can be chosen or drafted in Add/Edit guest, with shared catalogue renaming and usage counts. Tag filters combine with existing search/events; full-admin attendance CSV includes tag names and restricted exports omit them. CSV imports accept an optional tags column, adding labels while preserving omitted/blank values.
+
+`database/guest-tags.sql` adds RLS-protected catalogue/assignment tables and a service-role-only `save_guest_atomic_v2` transaction wrapper. Actual local PostgreSQL tests verify full rollback, legacy save compatibility, saved-RSVP event restrictions, tag removal, normalization/reuse, import add/preserve behaviour, global rename, ten-tag limit and restricted permissions. 65 backend and 82 frontend tests pass; production frontend build passes (360.07 kB initial working-tree bundle; existing gallery CSS warning remains).
+
+Synthetic browser checks confirmed guest filtering, tag creation/save, shared rename and full-admin dashboard counts at desktop/mobile sizes. No production SQL, real guest changes or deployment were performed. Production rollout awaits owner review/application of the SQL as required by the approved design. See `docs/guest-tags-release.md`. Invitation recovery remains unchanged and has been added to `BACKLOG.md` for a later design revision.

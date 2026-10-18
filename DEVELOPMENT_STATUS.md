@@ -39,3 +39,15 @@ Unrelated local admin styling edits and existing favicon/planning changes are ke
 Gallery release validation: exact staged source passed 49 backend tests, 72 frontend tests and the production build (373.20 kB initial bundle). Gallery stylesheet has a non-blocking 202-byte warning above the 4 kB warning budget, below the 8 kB error limit. Browser fixture verification additionally passed at 320px with 44px chapter controls.
 
 Gallery implementation commit 89d0644 deployed successfully to both Vercel projects. Live checks: `/api/gallery` returned an empty photo list, anonymous upload requests returned HTTP 401, `/gallery` rendered without browser errors or mobile horizontal overflow, and `/admin/gallery` redirected anonymous visitors to sign-in while preserving the destination. A final CSS correction gives the mobile empty-state heading explicit line spacing. No production photo upload was performed.
+
+## Guest tags — implemented locally, migration pending (12 October 2026)
+
+Approved guest tags are implemented: private multi-label selection/creation, shared rename controls, guest-list and full-admin dashboard filters, CSV add/preserve semantics and filtered exports. Guest details, event assignments and tag changes use a versioned transaction wrapper; legacy clients/CSV keep the original saving path and preserve tags. Draft input is retained on failures.
+
+Validation: 65 backend tests (including eight actual PostgreSQL guest-tag migration/transaction tests), 82 frontend tests and production build pass. The working-tree build includes the owner's existing mobile invitation update. Synthetic local admin browser checks verified filtering, pending tag creation/save, global rename, modal behaviour, mobile tag editing and filtered attendee totals. No production guest/tag mutation or SQL migration was performed.
+
+Owner review/application of `database/guest-tags.sql` is required before deploying tag-aware endpoints. Installation/release and rollback steps are in `docs/guest-tags-release.md`. The migration adds two private tables and a service-role-only wrapper; no existing invitation tokens or RSVP rows are rewritten. Invitation recovery is deferred for a better design review in `BACKLOG.md`.
+
+## Guest tags production rollout — 18 October 2026
+
+Owner review is complete and production deployment is authorized. Fresh validation passes: 65 backend tests, 82 frontend tests, successful production frontend build. Database probes show the tag tables and versioned RPC are not yet installed. Production application deployment is held until the approved SQL can be applied through a database-admin connection or authenticated dashboard. `backend/scripts/verify-guest-tags.cjs` verifies installation and anonymous access denial without modifying guest records.

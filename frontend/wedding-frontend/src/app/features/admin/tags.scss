@@ -1,0 +1,26 @@
+.guest-tag {
+  display: inline-block;
+  padding: 5px 9px;
+  margin: 3px 4px 3px 0;
+  border: 1px solid #c8c7a7;
+  border-radius: 20px;
+  background: #eef0dd;
+  color: #214f38;
+  font:
+    13px/1.4 Arial,
+    sans-serif;
+  overflow-wrap: anywhere;
+}
+.mobile-guest-tags {
+  display: none;
+}
+@media (max-width: 600px) {
+  .tag-column {
+    display: none;
+  }
+  .mobile-guest-tags {
+    display: block;
+    min-width: 145px;
+    max-width: 210px;
+  }
+}

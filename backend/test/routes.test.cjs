@@ -138,3 +138,38 @@ test('guest edit reports a rolled-back database failure',async()=>{
 test('RSVP rejects a stale assignment snapshot at the transaction boundary',async()=>{
   plans=[guestPlan(),{table:'rsvps',result:ok([])},{table:'guest_events',result:ok([{event:{id:eid}}])},{rpc:'submit_rsvp_atomic',result:{error:{code:'P0001',message:'EVENT_ASSIGNMENTS_CHANGED'}}}];const result=await request(`/api/invite/${token}/rsvp`,'POST',{responses:[{event_id:eid,attending:true}]});assert.equal(result.status,400);assert.match(result.data.error,/invited events have changed/);
 });
+
+test('full guest lists contain private tags and catalogue usage counts',async()=>{
+  plans=[adminPlan('full'),{table:'guests',result:ok([guest])},{table:'guest_events',result:ok([{guest_id:'guest',event_id:eid}])},{table:'rsvps',result:ok([])},{table:'guest_tags',result:ok([{id:eid,name:'Office friends'}])},{table:'guest_tag_assignments',result:ok([{guest_id:'guest',tag_id:eid}])}];
+  const {data}=await request('/api/admin/guests','GET',undefined,true);assert.deepEqual(data.guests[0].tags,[{id:eid,name:'Office friends'}]);assert.equal(data.tags[0].guest_count,1);
+});
+test('full dashboard includes tags without leaking them to restricted users',async()=>{
+  plans=[adminPlan('full'),{table:'guests',result:ok([{id:'g',name:'Test',party_size:2}])},{table:'events',result:ok([{id:eid}])},{table:'rsvps',result:ok([])},{table:'guest_events',result:ok([{guest_id:'g',event_id:eid}])},{table:'guest_tags',result:ok([{id:eid,name:'Office'}])},{table:'guest_tag_assignments',result:ok([{guest_id:'g',tag_id:eid}])}];
+  const {data}=await request('/api/admin/rsvps','GET',undefined,true);assert.equal(data.guests[0].tags[0].name,'Office');
+});
+test('restricted and anonymous clients cannot list, create or rename tags',async()=>{
+  for(const [path,method] of [['/api/admin/tags','GET'],['/api/admin/tags','POST'],[`/api/admin/tags/${eid}`,'PATCH']]){
+    assert.equal((await request(path,method,{},false)).status,401);plans=[adminPlan('restricted')];assert.equal((await request(path,method,{},true)).status,403);
+  }
+});
+test('tag-aware guest saves use one transactional RPC with normalized draft labels',async()=>{
+  plans=[adminPlan('full'),{rpc:'save_guest_atomic_v2',result:args=>{assert.deepEqual(args.p_tag_ids,[token]);assert.deepEqual(args.p_new_tags,['School friends']);assert.equal(args.p_tag_mode,'replace');return ok({guest:{...guest,tags:[{id:token,name:'Office'}]}});}}];
+  const result=await request(`/api/admin/guests/${token}`,'PATCH',{name:'A',phone:'123',party_size:2,event_ids:[eid],tag_ids:[token],new_tags:[' School   friends ','school friends']},true);assert.equal(result.status,200);assert.equal(result.data.guest.tags[0].name,'Office');
+});
+test('invalid tags are rejected before any write RPC',async()=>{
+  for(const tags of [{tag_ids:null},{tag_ids:['bad']},{new_tags:['bad|tag']},{new_tags:['x'.repeat(41)]},{new_tags:Array.from({length:11},(_,i)=>'Tag '+i)}]){
+    plans=[adminPlan('full')];assert.equal((await request('/api/admin/guests','POST',{name:'A',phone:'123',party_size:1,event_ids:[eid],...tags},true)).status,400);
+  }
+});
+test('extended CSV uses add mode while blank labels retain the legacy preserving save',async()=>{
+  plans=[adminPlan('full'),{table:'events',result:ok([{id:eid,slug:'wedding'}])},{rpc:'save_guest_atomic_v2',result:args=>{assert.equal(args.p_tag_mode,'add');assert.deepEqual(args.p_new_tags,['Office','School']);return ok({created:true,guest});}},{rpc:'save_guest_atomic',result:ok({created:false,guest})}];
+  const result=await request('/api/admin/guests/import','POST',{csv:'name,phone,party_size,events,tags\nA,123,2,wedding,Office|School\nB,456,2,wedding,'},true);assert.equal(result.data.created,1);assert.equal(result.data.updated,1);
+});
+test('catalogue rename normalizes names and reports collisions without changing assignments',async()=>{
+  plans=[adminPlan('full'),{table:'guest_tags',result:calls=>{assert.deepEqual(calls.find(call=>call[0]==='update')[1],{name:'Office friends'});return ok({id:eid,name:'Office friends'});}}];assert.equal((await request(`/api/admin/tags/${eid}`,'PATCH',{name:' Office   friends '},true)).status,200);
+  plans=[adminPlan('full'),{table:'guest_tags',result:{error:{code:'23505'}}}];assert.equal((await request(`/api/admin/tags/${eid}`,'PATCH',{name:'Existing'},true)).status,409);
+});
+test('a tag limit error is actionable and leaves the whole CSV row unsaved',async()=>{
+  plans=[adminPlan('full'),{table:'events',result:ok([{id:eid,slug:'wedding'}])},{rpc:'save_guest_atomic_v2',result:{error:{code:'P0001',message:'TOO_MANY_TAGS'}}}];
+  const result=await request('/api/admin/guests/import','POST',{csv:'name,phone,party_size,events,tags\nA,123,2,wedding,More'},true);assert.equal(result.data.failed,1);assert.match(result.data.results[0].message,/more than 10 tags/);
+});

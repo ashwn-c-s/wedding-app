@@ -1,0 +1,38 @@
+<fieldset class="tag-field">
+  <legend>Tags <span>(optional)</span></legend>
+  <p class="hint">Private organiser labels. Select up to 10; they do not change invited events.</p>
+  <div class="chips" aria-live="polite">
+    @for (tag of selected(); track tag.id) {
+      <button type="button" [attr.aria-label]="'Remove ' + tag.name" (click)="remove(tag.id)">
+        {{ tag.name }} <span aria-hidden="true">×</span>
+      </button>
+    } @empty {
+      <span>No tags selected</span>
+    }
+  </div>
+  <div class="add-row">
+    <label
+      >Find or create a tag<input
+        type="text"
+        [ngModel]="query()"
+        (ngModelChange)="query.set($event); error.set('')"
+        [ngModelOptions]="{ standalone: true }"
+        maxlength="40"
+        placeholder="e.g. Office friends"
+        (keydown.enter)="$event.preventDefault(); create()" /></label
+    ><button type="button" (click)="create()" [disabled]="!query().trim()">Create &amp; add</button>
+  </div>
+  <div class="suggestions" aria-label="Available tags">
+    @for (tag of suggestions(); track tag.id) {
+      <button type="button" (click)="choose(tag)" [attr.aria-label]="'Add ' + tag.name">
+        + {{ tag.name }}
+      </button>
+    }
+  </div>
+  @if (names().length) {
+    <p class="hint">New labels are created when you save this guest.</p>
+  }
+  @if (error()) {
+    <p role="alert" class="error">{{ error() }}</p>
+  }
+</fieldset>

@@ -1,10 +1,116 @@
-<main class="admin-page"><app-admin-nav/><h1>RSVP dashboard</h1>
-@if(error()){<p class="error" role="alert">{{error()}}</p>}
-<div class="filters"><label>Search guest<input type="search" [ngModel]="search()" (ngModelChange)="search.set($event)"></label><label>Event<select [ngModel]="eventId()" (ngModelChange)="eventId.set($event)"><option value="">All events</option>@for(event of data().events; track event.id){<option [value]="event.id">{{event.name}}</option>}</select></label></div>
-@if(loading()){<p role="status">Loading RSVP results…</p>} @else {
-<div class="metrics"><div class="metric"><strong>{{summary().invited}}</strong>Invitations</div><div class="metric"><strong>{{summary().peopleInvited}}</strong>Persons invited</div><div class="metric"><strong>{{summary().confirmed}}</strong>Confirmed invitations</div><div class="metric"><strong>{{summary().declined}}</strong>Declined invitations</div><div class="metric"><strong>{{summary().pending}}</strong>Pending invitations</div></div>
-<p class="hint">Counts follow the selected filters. Each invitation is one party. Pending means at least one selected event awaits a response, or no events have been assigned; confirmed means all responses received with at least one acceptance; declined means all selected events declined. Persons use the recorded party size.</p>
-<section class="panel"><h2>Event attendance</h2><div class="table-wrap"><table><thead><tr><th>Event</th><th>Invitations</th><th>Confirmed</th><th>Declined</th><th>Pending</th><th>Persons attending</th></tr></thead><tbody>@for(event of eventSummary(); track event.name){<tr><td>{{event.name}}</td><td>{{event.invited}}</td><td>{{event.confirmed}}</td><td>{{event.declined}}</td><td>{{event.pending}}</td><td>{{event.attendees}}</td></tr>} @empty{<tr><td colspan="6">No events available.</td></tr>}</tbody></table></div></section>
-<button (click)="exportCsv()" [disabled]="rows().length === 0">Export filtered CSV</button><button class="secondary" (click)="load()">Refresh</button>
-<div class="table-wrap"><table><thead><tr><th>Guest</th><th>Party size</th><th>Event</th><th>Response</th></tr></thead><tbody>@for(row of rows(); track row.guestId + ':' + row.eventId){<tr><td>{{row.name}}</td><td>{{row.partySize}}</td><td>{{row.event}}</td><td>{{row.response}}</td></tr>} @empty{<tr><td colspan="4">No invitations match these filters.</td></tr>}</tbody></table></div>
-}</main>
+<main class="admin-page">
+  <app-admin-nav />
+  <h1>RSVP dashboard</h1>
+  @if (error()) {
+    <p class="error" role="alert">{{ error() }}</p>
+  }
+  <div class="filters">
+    <label
+      >Search guest<input
+        type="search"
+        [ngModel]="search()"
+        (ngModelChange)="search.set($event)" /></label
+    ><label
+      >Event<select [ngModel]="eventId()" (ngModelChange)="eventId.set($event)">
+        <option value="">All events</option>
+        @for (event of data().events; track event.id) {
+          <option [value]="event.id">{{ event.name }}</option>
+        }
+      </select></label
+    >
+    @if(auth.role()==='full'){<label>Tag<select [ngModel]="tagId()" (ngModelChange)="tagId.set($event)"><option value="">All tags</option>@for(tag of data().tags || [];track tag.id){<option [value]="tag.id">{{tag.name}}</option>}<option value="untagged">Untagged</option></select></label>}
+  </div>
+  @if (loading()) {
+    <p role="status">Loading RSVP results…</p>
+  } @else {
+    <div class="metrics">
+      <div class="metric">
+        <strong>{{ summary().invited }}</strong
+        >Invitations
+      </div>
+      <div class="metric">
+        <strong>{{ summary().peopleInvited }}</strong
+        >Persons invited
+      </div>
+      <div class="metric">
+        <strong>{{ summary().confirmed }}</strong
+        >Confirmed invitations
+      </div>
+      <div class="metric">
+        <strong>{{ summary().declined }}</strong
+        >Declined invitations
+      </div>
+      <div class="metric">
+        <strong>{{ summary().pending }}</strong
+        >Pending invitations
+      </div>
+    </div>
+    <p class="hint">
+      Counts follow the selected filters. Each invitation is one party. Pending means at least one
+      selected event awaits a response, or no events have been assigned; confirmed means all
+      responses received with at least one acceptance; declined means all selected events declined.
+      Persons use the recorded party size.
+    </p>
+    <section class="panel">
+      <h2>Event attendance</h2>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Event</th>
+              <th>Invitations</th>
+              <th>Confirmed</th>
+              <th>Declined</th>
+              <th>Pending</th>
+              <th>Persons attending</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (event of eventSummary(); track event.name) {
+              <tr>
+                <td>{{ event.name }}</td>
+                <td>{{ event.invited }}</td>
+                <td>{{ event.confirmed }}</td>
+                <td>{{ event.declined }}</td>
+                <td>{{ event.pending }}</td>
+                <td>{{ event.attendees }}</td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="6">No events available.</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </section>
+    <button (click)="exportCsv()" [disabled]="rows().length === 0">Export filtered CSV</button
+    ><button class="secondary" (click)="load()">Refresh</button>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Guest</th>
+            <th>Party size</th>
+            <th>Event</th>
+            <th>Response</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (row of rows(); track row.guestId + ':' + row.eventId) {
+            <tr>
+              <td>{{ row.name }}</td>
+              <td>{{ row.partySize }}</td>
+              <td>{{ row.event }}</td>
+              <td>{{ row.response }}</td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="4">No invitations match these filters.</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</main>

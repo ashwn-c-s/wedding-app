@@ -1,0 +1,96 @@
+:host {
+  display: block;
+  margin: 1rem 0;
+  color: inherit;
+  font:
+    14px Arial,
+    sans-serif;
+}
+.tag-field {
+  border: 1px solid #d9cbaa;
+  border-radius: 8px;
+  padding: 1rem;
+  min-width: 0;
+}
+legend span,
+.hint {
+  font-size: 13px;
+  color: #526148;
+}
+.hint {
+  line-height: 1.6;
+}
+.chips,
+.suggestions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin: 12px 0;
+}
+.chips button,
+.suggestions button {
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
+.chips button {
+  border-radius: 24px;
+  background: #214f38;
+  color: #fffaf0;
+  border: 0;
+}
+.suggestions button {
+  background: transparent;
+  color: #214f38;
+  border: 1px solid #baaa8c;
+  border-radius: 24px;
+}
+button {
+  font: inherit;
+  padding: 10px 14px;
+  min-height: 44px;
+  cursor: pointer;
+}
+button:disabled {
+  opacity: 0.5;
+}
+label {
+  display: block;
+}
+input {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  font:
+    16px Arial,
+    sans-serif;
+  color: #214f38;
+  background: #fffaf0;
+  padding: 12px;
+  border: 1px solid #baaa8c;
+  border-radius: 6px;
+  margin-top: 6px;
+}
+.add-row {
+  display: flex;
+  align-items: end;
+  gap: 12px;
+}
+.add-row label {
+  flex: 1;
+  min-width: 0;
+}
+.add-row button {
+  border: 1px solid #214f38;
+  color: #214f38;
+  background: transparent;
+  border-radius: 6px;
+}
+.error {
+  color: #94412e;
+}
+@media (max-width: 500px) {
+  .add-row {
+    align-items: stretch;
+    flex-direction: column;
+  }
+}
