@@ -1,4 +1,6 @@
 import { TestBed } from '@angular/core/testing';
+import { By } from '@angular/platform-browser';
+import { GuestLocationEditor } from '../guest-location-editor/guest-location-editor';
 import { provideRouter } from '@angular/router';
 import { of } from 'rxjs';
 import { vi } from 'vitest';
@@ -25,6 +27,7 @@ describe('Guest list actions and identity', () => {
       {provide: AdminService, useValue: {
         guests: () => of({guests: [guest], tags: guest.tags}),
         events: () => of({events: [event]}),
+        saveGuest: vi.fn().mockReturnValue(of({guest})),
       }},
     ]});
   });
@@ -125,6 +128,40 @@ describe('Guest list actions and identity', () => {
     await fixture.whenStable();
     expect(fixture.componentInstance.editingId).toBe(guest.id);
     expect(fixture.nativeElement.querySelector('input[name="guestName"]').value).toBe(guest.name);
+  });
+
+  it('includes optional location in the guest save, blocks invalid/pending input, and can clear it', async () => {
+    const fixture = await render();
+    const component = fixture.componentInstance;
+    fixture.nativeElement.querySelector('.guest-table [title="Edit guest"]').click(); fixture.detectChanges(); await fixture.whenStable();
+    const editor: GuestLocationEditor = fixture.debugElement.query(By.directive(GuestLocationEditor)).componentInstance;
+    const api = TestBed.inject(AdminService);
+    editor.type='coordinates'; editor.latitude=91; editor.longitude=76; editor.update();
+    await component.save(); expect(api.saveGuest).not.toHaveBeenCalled();
+    editor.latitude=10.5; editor.update();
+    component.locating.set(true); await component.save(); expect(api.saveGuest).not.toHaveBeenCalled();
+    component.locating.set(false); await component.save();
+    expect(api.saveGuest).toHaveBeenCalledWith(guest.id,expect.objectContaining({location:{type:'coordinates',latitude:10.5,longitude:76,accuracy_m:null,address:null}}));
+    const location = {type:'maps' as const,maps_url:'https://maps.app.goo.gl/home'};
+    component.guests.set([{...guest,location}]); fixture.detectChanges();
+    fixture.nativeElement.querySelector('.guest-table [title="Edit guest"]').click();
+    fixture.detectChanges(); await fixture.whenStable();
+    expect(component.draft?.location).toEqual(location);
+    const resetEditor:GuestLocationEditor=fixture.debugElement.query(By.directive(GuestLocationEditor)).componentInstance;
+    resetEditor.clear(); await component.save();
+    expect(api.saveGuest).toHaveBeenLastCalledWith(guest.id,expect.objectContaining({location:null}));
+  });
+
+  it('shows a private Maps pin on cards only when a guest has a saved location', async () => {
+    const fixture = await render();
+    fixture.componentInstance.guests.set([{...guest,location:{type:'coordinates',latitude:10.5,longitude:76.2}}]);
+    fixture.detectChanges();
+    const pin:HTMLAnchorElement=fixture.nativeElement.querySelector('[title="Guest location"]');
+    expect(pin.href).toContain('query=10.5,76.2');
+    expect(pin.getAttribute('aria-label')).toContain('Open guest location for Anita');
+    fixture.componentInstance.viewMode.set('list');fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('[title="Guest location"]')).toBeNull();
+    expect(fixture.nativeElement.querySelectorAll('.guest-table th')).toHaveLength(5);
   });
 
   it('reports clipboard failure without claiming the invitation was copied', async () => {

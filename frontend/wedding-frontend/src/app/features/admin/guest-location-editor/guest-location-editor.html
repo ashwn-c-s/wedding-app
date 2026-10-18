@@ -1,0 +1,26 @@
+<section aria-label="Optional guest location">
+  <h3>Guest location <span>(optional)</span></h3>
+  <p>Private to full admins. Use your device location only when you are at the guest’s home or the location you want to save.</p>
+  <button type="button" (click)="useCurrentLocation()" [disabled]="busy">{{ busy ? 'Finding location…' : 'Use my current location' }}</button>
+  <label>Location format
+    <select name="locationType" [(ngModel)]="type" (ngModelChange)="changeType()">
+      <option value="maps">Google Maps link</option><option value="coordinates">Coordinates</option>
+    </select>
+  </label>
+  @if (type === 'maps') {
+    <label>Google Maps location link<input type="url" name="guestMaps" [(ngModel)]="maps" (ngModelChange)="update()" maxlength="2048" placeholder="https://maps.app.goo.gl/…" /></label>
+  } @else {
+    <div class="coordinates">
+      <label>Latitude<input type="number" name="guestLatitude" [(ngModel)]="latitude" (ngModelChange)="update(true)" min="-90" max="90" step="any" placeholder="10.5276" /></label>
+      <label>Longitude<input type="number" name="guestLongitude" [(ngModel)]="longitude" (ngModelChange)="update(true)" min="-180" max="180" step="any" placeholder="76.2144" /></label>
+    </div>
+    @if (accuracy !== null) {
+      <p role="status">Estimated accuracy: {{ accuracy.toFixed(0) }} metres. Check the pin before saving.</p>
+    }
+  }
+  <label>Address or landmark (optional)<input name="guestAddress" [(ngModel)]="address" (ngModelChange)="update()" maxlength="500" /></label>
+  @if (error) { <p role="alert" class="error">{{ error }}</p> }
+  @if (geoError) { <p role="alert" class="error">{{ geoError }}</p> }
+  @if (preview) { <a [href]="preview" target="_blank" rel="noopener noreferrer">Open in Google Maps (new tab)</a> }
+  @if (preview || maps || address || latitude !== null || longitude !== null) { <button type="button" class="clear" (click)="clear()">Remove location</button> }
+</section>

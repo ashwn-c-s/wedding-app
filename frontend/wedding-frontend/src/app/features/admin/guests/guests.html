@@ -41,6 +41,7 @@
               required
           /></label>
         </div>
+        <app-guest-location-editor [location]="guest.location || null" [session]="locationSession" (changed)="setLocation($event)" (invalid)="locationError.set($event)" (locating)="locating.set($event)" />
         <app-tag-picker [catalogue]="catalogue()" [ids]="guest.tag_ids || []" [names]="guest.new_tags || []" (selection)="setTags($event)" />
         <fieldset [disabled]="assignmentsLocked">
           <legend>Invited events</legend>
@@ -64,7 +65,7 @@
             their details and tags.
           </p>
         }
-        <button type="submit">{{ saving() ? 'Saving…' : 'Save guest' }}</button
+        <button type="submit" [disabled]="locating() || !!locationError()">{{ saving() ? 'Saving…' : 'Save guest' }}</button
         ><button type="button" class="secondary" (click)="draft = null">Cancel</button>
       </fieldset>
     </form>
@@ -188,6 +189,11 @@
                   <a class="icon-action" [href]="link(guest)" target="_blank" rel="noopener noreferrer" [attr.aria-label]="'Open invitation for ' + guest.name + ' (opens in a new tab)'" title="Open invitation">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="m10 13 4-4m-6 6-1 1a3.5 3.5 0 0 1-5-5l4-4a3.5 3.5 0 0 1 5 0m2 2 1-1a3.5 3.5 0 0 1 5 5l-4 4a3.5 3.5 0 0 1-5 0" transform="translate(1 1)"/></svg>
                   </a>
+                  }
+                  @if (viewMode() === 'cards' && locationUrl(guest.location); as locationLink) {
+                    <a class="icon-action" [href]="locationLink" target="_blank" rel="noopener noreferrer" [attr.aria-label]="'Open guest location for ' + guest.name + ' (opens in a new tab)'" title="Guest location">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true" focusable="false"><path d="M20 10c0 6-8 12-8 12S4 16 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+                    </a>
                   }
                   <button type="button" class="icon-action" (click)="edit(guest)" [disabled]="saving() || importing()" [attr.aria-label]="'Edit guest ' + guest.name" title="Edit guest">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="m16 3 5 5-12 12-6 1 1-6ZM13 6l5 5M4 15l5 5"/></svg>

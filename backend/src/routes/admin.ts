@@ -10,7 +10,7 @@ router.use(adminAuth);
 router.get('/session',(req:AdminRequest,res)=>{res.json({role:req.admin!.role});});
 router.get('/guests',fullAdmin,async (_req,res)=>{
   const [guests,assignments,responses,tags] = await Promise.all([
-    allRows((from,to)=>supabase.from('guests').select('id,name,phone,party_size,invite_token,created_at').order('name').order('id').range(from,to)),
+    allRows((from,to)=>supabase.from('guests').select('id,name,phone,party_size,invite_token,created_at,location').order('name').order('id').range(from,to)),
     allRows((from,to)=>supabase.from('guest_events').select('guest_id,event_id').order('id').range(from,to)),allRows((from,to)=>supabase.from('rsvps').select('guest_id,event_id,attending').order('id').range(from,to)),readTags()]);
   if(guests.error || assignments.error || responses.error || tags.error) {res.status(503).json({error:'Failed to load guests'});return;}
   res.json({tags:tags.tags,guests:(guests.data ?? []).map(guest=>({...guest,tags:tags.byGuest.get(guest.id)||[],event_ids:(assignments.data ?? []).filter(a=>a.guest_id===guest.id).map(a=>a.event_id),responses:(responses.data ?? []).filter(r=>r.guest_id===guest.id).map(r=>({event_id:r.event_id,attending:r.attending}))}))});

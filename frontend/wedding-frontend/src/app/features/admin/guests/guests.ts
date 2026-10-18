@@ -1,9 +1,11 @@
+import { GuestLocationEditor } from '../guest-location-editor/guest-location-editor';
+import { guestLocationUrl } from '../../../core/utils/guest-location';
 import { afterNextRender, Component, computed, ElementRef, inject, Injector, signal, viewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 import { AdminService } from '../../../core/services/admin.service';
-import { AdminGuest, GuestTag, GuestUpdate, ImportReport } from '../../../core/models/admin';
+import { AdminGuest, GuestLocation, GuestTag, GuestUpdate, ImportReport } from '../../../core/models/admin';
 import { Event } from '../../../core/models';
 import { invitationLink, whatsAppLink, whatsAppMessage } from '../../../core/utils/admin';
 import { TagPicker } from '../tag-picker/tag-picker';
@@ -12,7 +14,7 @@ import { matchesTag } from '../../../core/utils/tags';
 import { AdminNav } from '../admin-nav/admin-nav';
 @Component({
   selector: 'app-admin-guests',
-  imports: [FormsModule, AdminNav, TagPicker, TagManager],
+  imports: [FormsModule, AdminNav, TagPicker, TagManager, GuestLocationEditor],
   templateUrl: './guests.html',
   styleUrls: ['../admin.scss','../tags.scss', './guests.scss'],
 })
@@ -27,6 +29,11 @@ export class Guests {
     }, { injector: this.injector });
   }
   guests = signal<AdminGuest[]>([]);
+  locationError = signal('');
+  locating = signal(false);
+  locationSession = 0;
+  locationUrl = guestLocationUrl;
+  setLocation(location: GuestLocation | null) { if (this.draft) this.draft = {...this.draft, location}; }
   viewMode = signal<'cards' | 'list'>('cards');
   search = signal('');
   tagFilter = signal('');
@@ -69,6 +76,7 @@ export class Guests {
     }
   }
   add() {
+    this.locationError.set(''); this.locating.set(false); this.locationSession++;
     this.editingId = '';
     this.assignmentsLocked = false;
     this.draft = { name: '', phone: '', party_size: 1, event_ids: [] };
@@ -77,9 +85,11 @@ export class Guests {
     this.focusEditor();
   }
   edit(guest: AdminGuest) {
+    this.locationError.set(''); this.locating.set(false); this.locationSession++;
     this.editingId = guest.id;
     this.assignmentsLocked = guest.responses.length > 0;
     this.draft = {
+      ...(guest.location !== undefined ? {location: guest.location} : {}),
       name: guest.name,
       phone: guest.phone,
       party_size: guest.party_size,
@@ -110,7 +120,8 @@ export class Guests {
     );
   }
   async save() {
-    if (this.saving() || !this.draft) return;
+    if (this.saving() || !this.draft || this.locating()) return;
+    if (this.locationError()) { this.error.set(this.locationError()); return; }
     const update = {
       ...this.draft,
       name: this.draft.name.trim(),

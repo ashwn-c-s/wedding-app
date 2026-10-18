@@ -195,3 +195,16 @@ test('a tag limit error is actionable and leaves the whole CSV row unsaved',asyn
   plans=[adminPlan('full'),{table:'events',result:ok([{id:eid,slug:'wedding'}])},{rpc:'save_guest_atomic_v2',result:{error:{code:'P0001',message:'TOO_MANY_TAGS'}}}];
   const result=await request('/api/admin/guests/import','POST',{csv:'name,phone,party_size,events,tags\nA,123,2,wedding,More'},true);assert.equal(result.data.failed,1);assert.match(result.data.results[0].message,/more than 10 tags/);
 });
+
+test('full admin location saves use the transactional v3 RPC and reject bad input before writing',async()=>{
+ const location={type:'coordinates',latitude:10.5,longitude:76.2,accuracy_m:12,address:'Home'};
+ plans=[adminPlan('full'),{rpc:'save_guest_atomic_v3',result:args=>{assert.deepEqual(args.p_location,location);assert.equal(args.p_guest_id,eid);return ok({guest:{...guest,location}});}}];
+ const result=await request(`/api/admin/guests/${eid}`,'PATCH',{name:'Test',phone:'123',party_size:2,event_ids:[eid],location},true);
+ assert.equal(result.status,200);assert.deepEqual(result.data.guest.location,location);
+ plans=[adminPlan('full')];assert.equal((await request('/api/admin/guests','POST',{name:'Test',phone:'123',party_size:2,event_ids:[eid],location:{type:'coordinates',latitude:99,longitude:0}},true)).status,400);
+ plans=[adminPlan('restricted')];assert.equal((await request(`/api/admin/guests/${eid}`,'PATCH',{location},true)).status,403);
+});
+test('public invitation whitelists exclude private guest location even if a record contains it',async()=>{
+ plans=[{table:'guests',result:calls=>{assert.equal(calls.find(c=>c[0]==='select')[1].includes('location'),false);return ok({...guest,location:{type:'coordinates',latitude:10,longitude:76}});}},{table:'guest_events',result:ok([])}];
+ const result=await request(`/api/invite/${token}`);assert.deepEqual(result.data.guest,{id:'guest',name:'Test',party_size:2});
+});

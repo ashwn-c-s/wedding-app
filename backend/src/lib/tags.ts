@@ -1,3 +1,4 @@
+import { validateGuestLocation } from './guest-location';
 import { supabase } from "./supabase";
 import { allRows } from "./pagination";
 import { uuid, validateGuest } from "./validation";
@@ -85,6 +86,7 @@ export function validateTaggedGuest(body: unknown) {
   return {
     ...validateGuest(body),
     ...tagInput(body as Record<string, unknown>),
+    ...((body as Record<string, unknown>).location !== undefined ? {location:validateGuestLocation((body as Record<string, unknown>).location)} : {}),
   };
 }
 export function guestRpc(
@@ -100,6 +102,10 @@ export function guestRpc(
     p_party_size: input.party_size,
     p_event_ids: input.event_ids,
   };
+  if (input.location !== undefined) return supabase.rpc("save_guest_atomic_v3", {
+    ...args, p_tag_ids: input.tag_ids ?? null, p_new_tags: input.new_tags ?? null,
+    p_tag_mode: mode === "import" ? "add" : "replace", p_location: input.location,
+  });
   return input.tag_ids === undefined
     ? supabase.rpc("save_guest_atomic", args)
     : supabase.rpc("save_guest_atomic_v2", {
