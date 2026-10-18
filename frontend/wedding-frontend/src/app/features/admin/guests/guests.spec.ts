@@ -60,6 +60,21 @@ describe('Guest editor', () => {
     api.events.mockReturnValue(of({ events: [{ id: 'event-id', name: 'Wedding' }] }));
     TestBed.configureTestingModule({ providers: [{ provide: AdminService, useValue: api }] });
   });
+  it('shares only assigned and visible events in the WhatsApp draft', async () => {
+    const component = TestBed.runInInjectionContext(() => new Guests());
+    await Promise.resolve();
+    const base = {slug:'wedding',date:'2026-11-15T05:00:00Z',time_label:'Morning',venue_name:null,venue_address:null,maps_url:null,directions_text:null};
+    component.events.set([
+      {...base,id:'event-id',name:'Invited Wedding'},
+      {...base,id:'other',name:'Unassigned Event'},
+      {...base,id:'hidden',name:'Hidden Event',is_visible:false},
+    ]);
+    const text = new URL(component.whatsapp({...guest,event_ids:['event-id','hidden']})).searchParams.get('text');
+    expect(text).toContain('*Invited Wedding*');
+    expect(text).not.toContain('Unassigned Event');
+    expect(text).not.toContain('Hidden Event');
+    expect(text).toContain('/invite/same-token');
+  });
   it('creates a guest with selected events and displays the shareable result', async () => {
     api.createGuest.mockReturnValue(of({ guest: { ...guest, id: 'new-id', name: 'New' } }));
     const component = TestBed.runInInjectionContext(() => new Guests());

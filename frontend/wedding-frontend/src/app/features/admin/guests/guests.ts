@@ -200,6 +200,9 @@ export class Guests {
     return invitationLink(window.location.origin, guest.invite_token);
   }
   whatsapp(guest: AdminGuest) {
-    return whatsAppLink(window.location.origin, guest.invite_token, guest.name, guest.phone);
+    return whatsAppLink(
+      window.location.origin, guest.invite_token, guest.name, guest.phone,
+      this.events().filter(event => guest.event_ids.includes(event.id)),
+    );
   }
 }

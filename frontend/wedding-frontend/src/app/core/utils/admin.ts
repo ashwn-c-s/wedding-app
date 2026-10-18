@@ -1,9 +1,39 @@
 import { DashboardData } from '../models/admin';
+import { Event } from '../models';
+import { directionsUrl } from './event-location';
 export function invitationLink(origin: string, token: string): string { return `${origin.replace(/\/$/, '')}/invite/${encodeURIComponent(token)}`; }
-export function whatsAppLink(origin: string, token: string, name: string, phone: string): string {
+export function whatsAppMessage(origin: string, token: string, name: string, events: Event[] = []): string {
+  const dateFormat = new Intl.DateTimeFormat('en-IN', {
+    weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Asia/Kolkata',
+  });
+  const timeFormat = new Intl.DateTimeFormat('en-US', {
+    hour: 'numeric', minute: '2-digit', hour12: true, timeZone: 'Asia/Kolkata',
+  });
+  const details = events.filter(event => event.is_visible !== false)
+    .slice().sort((a, b) => Date.parse(a.date) - Date.parse(b.date) || a.id.localeCompare(b.id))
+    .map(event => {
+      const date = new Date(event.date);
+      const validDate = !Number.isNaN(date.getTime());
+      const day = validDate ? dateFormat.format(date) : 'Date to be announced';
+      const time = validDate && /T\d{2}:\d{2}/.test(event.date)
+        ? `${timeFormat.format(date).toLowerCase()} IST` : event.time_label;
+      const map = directionsUrl(event);
+      return [
+        `*${event.name}*`,
+        [day, time].filter(Boolean).join(' · '),
+        event.venue_name,
+        map ? `Map: ${map}` : 'Location to be announced',
+      ].filter(Boolean).join('\n');
+    });
+  return [
+    `Dear ${name}, we would love to celebrate our wedding with you!`,
+    ...details,
+    `Your invitation & RSVP:\n${invitationLink(origin, token)}`,
+  ].join('\n\n');
+}
+export function whatsAppLink(origin: string, token: string, name: string, phone: string, events: Event[] = []): string {
   const digits = /^\+[1-9]\d{7,14}$/.test(phone.trim()) ? phone.trim().slice(1) : '';
-  const text = `Dear ${name}, we would love to celebrate our wedding with you! ${invitationLink(origin, token)}`;
-  return `https://wa.me/${digits}?text=${encodeURIComponent(text)}`;
+  return `https://wa.me/${digits}?text=${encodeURIComponent(whatsAppMessage(origin, token, name, events))}`;
 }
 export function csvCell(value: unknown): string {
   let text = String(value ?? '');
