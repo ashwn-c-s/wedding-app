@@ -1,11 +1,11 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { afterNextRender, Component, computed, ElementRef, inject, Injector, signal, viewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 import { AdminService } from '../../../core/services/admin.service';
 import { AdminGuest, GuestTag, GuestUpdate, ImportReport } from '../../../core/models/admin';
 import { Event } from '../../../core/models';
-import { invitationLink, whatsAppLink } from '../../../core/utils/admin';
+import { invitationLink, whatsAppLink, whatsAppMessage } from '../../../core/utils/admin';
 import { TagPicker } from '../tag-picker/tag-picker';
 import { TagManager } from '../tag-manager/tag-manager';
 import { matchesTag } from '../../../core/utils/tags';
@@ -14,10 +14,18 @@ import { AdminNav } from '../admin-nav/admin-nav';
   selector: 'app-admin-guests',
   imports: [FormsModule, AdminNav, TagPicker, TagManager],
   templateUrl: './guests.html',
-  styleUrls: ['../admin.scss','../tags.scss'],
+  styleUrls: ['../admin.scss','../tags.scss', './guests.scss'],
 })
 export class Guests {
   private api = inject(AdminService);
+  private injector = inject(Injector);
+  private guestNameInput = viewChild<ElementRef<HTMLInputElement>>('guestNameInput');
+  private focusEditor() {
+    afterNextRender(() => {
+      const input = this.guestNameInput()?.nativeElement;
+      input?.focus();
+    }, { injector: this.injector });
+  }
   guests = signal<AdminGuest[]>([]);
   search = signal('');
   tagFilter = signal('');
@@ -65,6 +73,7 @@ export class Guests {
     this.draft = { name: '', phone: '', party_size: 1, event_ids: [] };
     this.error.set('');
     this.notice.set('');
+    this.focusEditor();
   }
   edit(guest: AdminGuest) {
     this.editingId = guest.id;
@@ -78,6 +87,7 @@ export class Guests {
     };
     this.error.set('');
     this.notice.set('');
+    this.focusEditor();
   }
   setTags(selection:{tag_ids:string[];new_tags:string[]}) {if(this.draft)this.draft={...this.draft,...selection};}
   renameTag(tag:GuestTag) {
@@ -187,22 +197,27 @@ export class Guests {
     }
   }
   async copy(guest: AdminGuest) {
+    this.error.set('');
+    this.notice.set('');
     try {
       await navigator.clipboard.writeText(
-        invitationLink(window.location.origin, guest.invite_token),
+        whatsAppMessage(window.location.origin, guest.invite_token, guest.name, this.invitedEvents(guest)),
       );
-      this.notice.set(`Invitation link copied for ${guest.name}.`);
+      this.notice.set(`Invitation copied for ${guest.name}.`);
     } catch {
-      this.error.set('Clipboard access failed. Copy the invitation link using its address below.');
+      this.error.set('Clipboard access failed. Use WhatsApp to open the invitation message, or try copying again.');
     }
   }
   link(guest: AdminGuest) {
     return invitationLink(window.location.origin, guest.invite_token);
   }
+  private invitedEvents(guest: AdminGuest) {
+    return this.events().filter(event => guest.event_ids.includes(event.id));
+  }
   whatsapp(guest: AdminGuest) {
     return whatsAppLink(
       window.location.origin, guest.invite_token, guest.name, guest.phone,
-      this.events().filter(event => guest.event_ids.includes(event.id)),
+      this.invitedEvents(guest),
     );
   }
 }
