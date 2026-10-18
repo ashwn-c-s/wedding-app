@@ -36,6 +36,28 @@ test('personalized invitation uses inner joined permitted visible events and omi
   plans=[guestPlan(),{table:'guest_events',result:calls=>{assert.ok(calls.some(c=>c[0]==='select'&&c[1].includes('events!inner')));assert.ok(calls.some(c=>c[0]==='eq'&&c[1]==='event.is_visible'));return ok([{event:{id:eid,is_visible:true}}]);}}];
   const {data}=await request(`/api/invite/${token}`);assert.deepEqual(data.guest,{id:'guest',name:'Test',party_size:2});assert.equal(data.events[0].id,eid);
 });
+test('personalized celebrations sort by complete date and time regardless of assignment order',async()=>{
+  const schedule=[
+    {id:'reception',date:'2026-11-15T12:00:00+00:00'},
+    {id:'eve',date:'2026-11-14T11:30:00+00:00'},
+    {id:'wedding',date:'2026-11-15T05:00:00+00:00'},
+    {id:'mehndi',date:'2026-11-14T04:30:00+00:00'},
+  ];
+  plans=[guestPlan(),{table:'guest_events',result:ok(schedule.map(event=>({event})))}];
+  const {data}=await request(`/api/invite/${token}`);
+  assert.deepEqual(data.events.map(event=>event.id),['mehndi','eve','wedding','reception']);
+});
+test('venue ordering compares instants across timezone offsets and breaks equal-time ties consistently',async()=>{
+  const schedule=[
+    {id:'late',date:'2026-11-15T10:00:00Z'},
+    {id:'b',date:'2026-11-15T10:30:00+05:30'},
+    {id:'a',date:'2026-11-15T05:00:00Z'},
+    {id:'earlier',date:'2026-11-15T04:00:00Z'},
+  ];
+  plans=[guestPlan(),{table:'guest_events',result:ok(schedule.map(event=>({event:[event]})))}];
+  const {data}=await request(`/api/invite/${token}/venues`);
+  assert.deepEqual(data.venues.map(event=>event.id),['earlier','a','b','late']);
+});
 test('saved RSVP rejects all changes before any write',async()=>{
   plans=[guestPlan(),{table:'rsvps',result:ok([{id:'saved'}])}];assert.equal((await request(`/api/invite/${token}/rsvp`,'POST',{responses:[]})).status,409);
 });

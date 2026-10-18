@@ -8,7 +8,10 @@ const fields = 'id,slug,name,date,time_label,venue_name,venue_address,maps_url,d
 export async function permittedEvents(guestId:string):Promise<EventRecord[]> {
   const {data,error} = await supabase.from('guest_events').select(`event:events!inner(${fields})`).eq('guest_id',guestId).eq('event.is_visible',true);
   if (error) throw new Error('Failed to fetch events');
-  return (data ?? []).flatMap(row => (Array.isArray(row.event) ? row.event : [row.event])).filter(Boolean);
+  // Joined guest assignments have no implicit order. Compare complete timestamps,
+  // including their timezone offsets, so same-day celebrations follow start time.
+  return (data ?? []).flatMap(row => (Array.isArray(row.event) ? row.event : [row.event])).filter(Boolean)
+    .sort((a,b)=>Date.parse(a.date)-Date.parse(b.date) || a.id.localeCompare(b.id));
 }
 router.get('/defaultevents',async (_req,res) => {
   const {data,error} = await supabase.from('events').select(fields).eq('is_visible',true).in('slug',['wedding','reception']).order('date');
