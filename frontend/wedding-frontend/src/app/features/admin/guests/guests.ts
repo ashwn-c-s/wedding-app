@@ -1,3 +1,5 @@
+import { AdminReadState, adminRead } from '../../../core/utils/admin-read-state';
+import { AdminReadStatus } from '../read-status/read-status';
 import { GuestLocationEditor } from '../guest-location-editor/guest-location-editor';
 import { guestLocationUrl } from '../../../core/utils/guest-location';
 import { afterNextRender, Component, computed, ElementRef, inject, Injector, signal, viewChild } from '@angular/core';
@@ -14,7 +16,7 @@ import { matchesTag } from '../../../core/utils/tags';
 import { AdminNav } from '../admin-nav/admin-nav';
 @Component({
   selector: 'app-admin-guests',
-  imports: [FormsModule, AdminNav, TagPicker, TagManager, GuestLocationEditor],
+  imports: [FormsModule, AdminNav, TagPicker, TagManager, GuestLocationEditor, AdminReadStatus],
   templateUrl: './guests.html',
   styleUrls: ['../admin.scss','../tags.scss', './guests.scss'],
 })
@@ -39,7 +41,10 @@ export class Guests {
   tagFilter = signal('');
   tags = signal<GuestTag[]>([]);
   catalogue = computed(() => this.tags().map(tag => ({...tag,guest_count:this.guests().filter(guest=>guest.tags?.some(label=>label.id===tag.id)).length})).sort((a,b)=>a.name.localeCompare(b.name)));
-  loading = signal(true);
+  readonly read = new AdminReadState();
+  loading = this.read.loading;
+  needsReconcile = signal(false);
+  feedback = signal<'guest'|'import'|'share'>('share');
   importing = signal(false);
   error = signal('');
   notice = signal('');
@@ -59,22 +64,17 @@ export class Guests {
     void this.load();
   }
   async load() {
-    this.loading.set(true);
-    this.error.set('');
-    try {
-      const [guests, events] = await Promise.all([
-        firstValueFrom(this.api.guests()),
-        firstValueFrom(this.api.events()),
-      ]);
-      this.guests.set(guests.guests);
-      this.tags.set(guests.tags || []);
-      this.events.set(events.events);
-    } catch {
-      this.error.set('Unable to load guests and events. Check your session and try again.');
-    } finally {
-      this.loading.set(false);
-    }
+    if (this.saving() || this.importing()) return false;
+    return this.read.run(
+      () => Promise.all([adminRead(this.api.guests()), adminRead(this.api.events())]),
+      ([guests, events]) => {
+        this.guests.set(guests.guests); this.tags.set(guests.tags || []); this.events.set(events.events);
+        this.needsReconcile.set(false);
+      },
+      'Unable to load guests and events. Please retry.',
+    );
   }
+  clearFilters() { this.search.set(''); this.tagFilter.set(''); }
   add() {
     this.locationError.set(''); this.locating.set(false); this.locationSession++;
     this.editingId = '';
@@ -102,6 +102,7 @@ export class Guests {
   }
   setTags(selection:{tag_ids:string[];new_tags:string[]}) {if(this.draft)this.draft={...this.draft,...selection};}
   renameTag(tag:GuestTag) {
+    this.read.cancel();
     this.tags.update(tags=>tags.map(existing=>existing.id===tag.id?{...existing,name:tag.name}:existing));
     this.guests.update(guests=>guests.map(guest=>({...guest,tags:guest.tags?.map(existing=>existing.id===tag.id?{...existing,name:tag.name}:existing)})));
     this.notice.set('Tag renamed for all associated guests.');
@@ -120,7 +121,8 @@ export class Guests {
     );
   }
   async save() {
-    if (this.saving() || !this.draft || this.locating()) return;
+    if (this.saving() || this.importing() || !this.draft || this.locating() || this.needsReconcile()) return;
+    this.feedback.set('guest');
     if (this.locationError()) { this.error.set(this.locationError()); return; }
     const update = {
       ...this.draft,
@@ -141,6 +143,7 @@ export class Guests {
       );
       return;
     }
+    this.read.cancel();
     this.saving.set(true);
     this.error.set('');
     this.notice.set('');
@@ -165,8 +168,8 @@ export class Guests {
         error instanceof HttpErrorResponse && typeof error.error?.error === 'string'
           ? error.error.error
           : 'Unable to save guest. Refresh the list before retrying.';
-      await this.load();
       this.error.set(message);
+      if (!(error instanceof HttpErrorResponse) || error.status === 0 || error.status >= 500) this.needsReconcile.set(true);
       // Preserve unsaved guest details and tag selections for correction/retry.
     } finally {
       this.saving.set(false);
@@ -187,18 +190,22 @@ export class Guests {
     }
   }
   async importCsv() {
-    if (this.importing()) return;
+    if (this.importing() || this.saving() || this.needsReconcile()) return;
+    this.feedback.set('import');
     this.error.set('');
     this.report.set(null);
     if (!this.csv.trim()) {
       this.error.set('Choose a CSV file or paste CSV contents first.');
       return;
     }
+    this.read.cancel();
     this.importing.set(true);
     try {
       this.report.set(await firstValueFrom(this.api.importGuests(this.csv)));
+      this.importing.set(false);
       await this.load();
     } catch (error) {
+      if (!(error instanceof HttpErrorResponse) || error.status === 0 || error.status >= 500) this.needsReconcile.set(true);
       this.error.set(
         error instanceof HttpErrorResponse && typeof error.error?.error === 'string'
           ? error.error.error
@@ -209,6 +216,7 @@ export class Guests {
     }
   }
   async copy(guest: AdminGuest) {
+    this.feedback.set('share');
     this.error.set('');
     this.notice.set('');
     try {

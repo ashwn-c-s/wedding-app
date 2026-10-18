@@ -1,6 +1,7 @@
+import { AdminReadState, adminRead } from '../../../core/utils/admin-read-state';
+import { AdminReadStatus } from '../read-status/read-status';
 import { Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { firstValueFrom } from 'rxjs';
 import { AdminService } from '../../../core/services/admin.service';
 import { DashboardData } from '../../../core/models/admin';
 import { attendanceRows, attendanceSummary, buildCsv } from '../../../core/utils/admin';
@@ -9,7 +10,7 @@ import { AdminAuthService } from '../../../core/services/admin-auth.service';
 import { AdminNav } from '../admin-nav/admin-nav';
 @Component({
   selector: 'app-admin-dashboard',
-  imports: [FormsModule, AdminNav],
+  imports: [FormsModule, AdminNav, AdminReadStatus],
   templateUrl: './dashboard.html',
   styleUrl: '../admin.scss',
 })
@@ -17,8 +18,8 @@ export class Dashboard {
   private api = inject(AdminService);
   readonly auth = inject(AdminAuthService);
   data = signal<DashboardData>({ guests: [], events: [], responses: [] });
-  loading = signal(true);
-  error = signal('');
+  readonly read = new AdminReadState();
+  loading = this.read.loading;
   search = signal('');
   eventId = signal('');
   tagId = signal('');
@@ -52,16 +53,9 @@ export class Dashboard {
     void this.load();
   }
   async load() {
-    this.loading.set(true);
-    this.error.set('');
-    try {
-      this.data.set(await firstValueFrom(this.api.dashboard()));
-    } catch {
-      this.error.set('Unable to load RSVP results. Check your session and try again.');
-    } finally {
-      this.loading.set(false);
-    }
+    return this.read.run(() => adminRead(this.api.dashboard()), value => this.data.set(value), 'Unable to load RSVP results. Please retry.');
   }
+  clearFilters() { this.search.set(''); this.eventId.set(''); this.tagId.set(''); }
   exportRows() {
     return [
       ['Guest', 'Party size', 'Event', 'Response', 'Submitted at',...(this.auth.role()==='full'?['Tags']:[])],

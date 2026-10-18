@@ -1,8 +1,9 @@
+import { AdminReadState, adminRead } from '../../../core/utils/admin-read-state';
+import { AdminReadStatus } from '../read-status/read-status';
 import { Component, inject, signal, OnDestroy } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
-import { firstValueFrom } from 'rxjs';
 import { AdminNav } from '../admin-nav/admin-nav';
 import {
   GalleryService,
@@ -13,14 +14,15 @@ import { Photo } from '../../../core/models';
 
 @Component({
   selector: 'app-admin-gallery',
-  imports: [AdminNav, FormsModule, RouterLink],
+  imports: [AdminNav, FormsModule, RouterLink, AdminReadStatus],
   templateUrl: './gallery.html',
   styleUrls: ['../admin.scss', './gallery.scss'],
 })
 export class AdminGallery implements OnDestroy {
   private api = inject(GalleryService);
   photos = signal<Photo[]>([]);
-  loading = signal(true);
+  readonly read = new AdminReadState();
+  loading = this.read.loading;
   busy = signal(false);
   error = signal('');
   notice = signal('');
@@ -34,15 +36,8 @@ export class AdminGallery implements OnDestroy {
     void this.load();
   }
   async load() {
-    this.loading.set(true);
-    this.error.set('');
-    try {
-      this.photos.set((await firstValueFrom(this.api.list())).photos);
-    } catch {
-      this.error.set('Unable to load the gallery. Please try again.');
-    } finally {
-      this.loading.set(false);
-    }
+    if (this.busy()) return false;
+    return this.read.run(() => adminRead(this.api.list()), value => this.photos.set(value.photos), 'Unable to load the photographs. Please retry.');
   }
   select(event: Event) {
     const input = event.target as HTMLInputElement;
@@ -62,6 +57,7 @@ export class AdminGallery implements OnDestroy {
   }
   async save(input: HTMLInputElement) {
     if (!this.file || this.busy()) return;
+    this.read.cancel();
     this.busy.set(true);
     this.error.set('');
     this.notice.set('');

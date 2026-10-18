@@ -62,7 +62,7 @@ describe('Guest editor', () => {
   });
   it('shares only assigned and visible events in the WhatsApp draft', async () => {
     const component = TestBed.runInInjectionContext(() => new Guests());
-    await Promise.resolve();
+    await component.load();
     const base = {slug:'wedding',date:'2026-11-15T05:00:00Z',time_label:'Morning',venue_name:null,venue_address:null,maps_url:null,directions_text:null};
     component.events.set([
       {...base,id:'event-id',name:'Invited Wedding'},
@@ -78,7 +78,7 @@ describe('Guest editor', () => {
   it('creates a guest with selected events and displays the shareable result', async () => {
     api.createGuest.mockReturnValue(of({ guest: { ...guest, id: 'new-id', name: 'New' } }));
     const component = TestBed.runInInjectionContext(() => new Guests());
-    await Promise.resolve();
+    await component.load();
     component.add();
     component.draft!.name = ' New ';
     component.draft!.phone = '456';
@@ -97,7 +97,7 @@ describe('Guest editor', () => {
     const confirmed = { ...guest, responses: [{ event_id: 'event-id', attending: true }] };
     api.saveGuest.mockReturnValue(of({ guest: { ...confirmed, name: 'Updated' } }));
     const component = TestBed.runInInjectionContext(() => new Guests());
-    await Promise.resolve();
+    await component.load();
     component.edit(confirmed);
     component.draft!.name = 'Updated';
     component.toggleEvent('other-event', true);
@@ -165,7 +165,7 @@ describe('Guest form rendering and recovery', () => {
     expect(fixture.nativeElement.textContent).toContain('Reception');
     expect(fixture.nativeElement.textContent).toContain('invited events are locked');
   });
-  it('reloads server state after a failed save and preserves the draft and explicit error', async () => {
+  it('shows a failed save immediately and preserves the draft until an explicit refresh', async () => {
     const api = {
       guests: vi.fn().mockReturnValue(of({ guests: [] })),
       events: vi.fn().mockReturnValue(of({ events: [] })),
@@ -190,6 +190,7 @@ describe('Guest form rendering and recovery', () => {
     expect(component.error()).toBe('Unable to save guest. Nothing was changed.');
     expect(component.draft).toEqual({name:'A',phone:'123',party_size:1,event_ids:['event-id']});
     expect(component.saving()).toBe(false);
-    expect(api.guests).toHaveBeenCalledTimes(3);
+    expect(api.guests).toHaveBeenCalledTimes(2);
+    expect(component.needsReconcile()).toBe(true);
   });
 });

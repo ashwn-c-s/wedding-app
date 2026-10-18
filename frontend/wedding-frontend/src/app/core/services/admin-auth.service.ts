@@ -1,14 +1,16 @@
 import { Injectable, PLATFORM_ID, inject, signal } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { firstValueFrom } from 'rxjs';
+import { firstValueFrom, from, timeout } from 'rxjs';
+import { AdminAccessState, AdminAccessUnavailable } from './admin-access-state';
 import { environment } from '../../../environments/environment';
 import { AdminRole } from '../models/admin';
 
 @Injectable({ providedIn: 'root' })
 export class AdminAuthService {
   private http = inject(HttpClient);
+  private access = inject(AdminAccessState);
   private browser = isPlatformBrowser(inject(PLATFORM_ID));
   private client: Promise<SupabaseClient> | null = null;
   readonly role = signal<AdminRole | null>(null);
@@ -32,13 +34,20 @@ export class AdminAuthService {
   }
   async authorize(): Promise<boolean> {
     this.role.set(null);
-    if (!await this.accessToken()) return false;
+    this.access.checking.set(true);
+    this.access.error.set('');
     try {
-      const session = await firstValueFrom(this.http.get<{role: AdminRole}>(`${environment.apiBaseUrl}/api/admin/session`));
+      if (!await firstValueFrom(from(this.accessToken()).pipe(timeout({first:15000})))) return false;
+      const session = await firstValueFrom(this.http.get<{role: AdminRole}>(`${environment.apiBaseUrl}/api/admin/session`).pipe(timeout({first:15000})));
       if (session.role !== 'full' && session.role !== 'restricted') return false;
       this.role.set(session.role);
       return true;
-    } catch { return false; }
+    } catch (error) {
+      if (error instanceof HttpErrorResponse && (error.status === 401 || error.status === 403)) return false;
+      const unavailable = new AdminAccessUnavailable();
+      this.access.error.set(unavailable.message);
+      throw unavailable;
+    } finally { this.access.checking.set(false); }
   }
   async login(email: string, password: string): Promise<void> {
     const { error } = await (await this.supabase()).auth.signInWithPassword({email: email.trim(), password});

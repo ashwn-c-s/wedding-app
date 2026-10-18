@@ -1,20 +1,21 @@
 <main class="admin-page">
   <app-admin-nav />
   <h1>Guests & invitations</h1>
-  @if (error()) {
+  @if (error() && (feedback() === 'share' || (feedback() === 'guest' && !draft))) {
     <p role="alert" class="error">{{ error() }}</p>
   }
   @if (notice()) {
-    <p role="status" class="success">{{ notice() }}</p>
+    <p role="status" class="success operation-notice">{{ notice() }}</p>
   }
-  <button type="button" (click)="add()" [disabled]="loading() || saving() || importing()">
+  <app-admin-read-status [state]="read" label="Guests" [shape]="viewMode() === 'cards' ? 'cards' : 'rows'" [disabled]="saving() || importing()" (retry)="load()" />
+  <button type="button" (click)="add()" [disabled]="loading() || !read.loaded() || saving() || importing() || needsReconcile()">
     Add guest
   </button>
   <app-tag-manager [catalogue]="catalogue()" (renamed)="renameTag($event)" />
   @if (draft; as guest) {
     <form class="panel" (ngSubmit)="save()">
       <h2>{{ editingId ? 'Edit guest' : 'Add guest' }}</h2>
-      <fieldset [disabled]="saving()" style="border: 0; padding: 0">
+      <fieldset [disabled]="saving()" [attr.aria-busy]="saving()" style="border: 0; padding: 0">
         <div class="fields">
           <label
             >Guest name<input
@@ -65,9 +66,13 @@
             their details and tags.
           </p>
         }
-        <button type="submit" [disabled]="locating() || !!locationError()">{{ saving() ? 'Saving…' : 'Save guest' }}</button
-        ><button type="button" class="secondary" (click)="draft = null">Cancel</button>
       </fieldset>
+      @if (error() && feedback() === 'guest') {<p class="error" role="alert">{{error()}}</p>}
+      <p role="status">{{ saving() ? 'Saving guest details and invitations…' : '' }}</p>
+      @if(needsReconcile()){<p class="hint">Refresh guests before saving again; the last change may already have been saved.</p><button type="button" class="secondary" (click)="load()" [disabled]="loading() || saving() || importing()">Refresh guests</button>}
+        <button type="submit" [disabled]="saving() || importing() || locating() || !!locationError() || loading() || needsReconcile()">{{ saving() ? 'Saving…' : 'Save guest' }}</button
+        ><button type="button" class="secondary" [disabled]="saving()" (click)="draft = null">Cancel</button>
+
     </form>
   }
   <section class="panel">
@@ -91,7 +96,10 @@
         placeholder="name,phone,party_size,events"
       ></textarea>
     </label>
-    <button type="button" (click)="importCsv()" [disabled]="importing() || loading() || saving()">
+    @if (error() && feedback() === 'import') {<p class="error" role="alert">{{error()}}</p>}
+    <p role="status">{{ importing() ? 'Importing guests. Please keep this page open; results will appear below.' : '' }}</p>
+    @if(needsReconcile() && feedback() === 'import'){<p class="hint">Refresh before another import; some rows may already have been saved.</p><button type="button" class="secondary" (click)="load()" [disabled]="loading() || saving() || importing()">Refresh guests</button>}
+    <button type="button" (click)="importCsv()" [disabled]="importing() || loading() || !read.loaded() || saving() || needsReconcile()">
       {{ importing() ? 'Importing…' : 'Validate & import' }}
     </button>
     @if (report(); as result) {
@@ -127,11 +135,9 @@
       (ngModelChange)="search.set($event)"
   /></label>
   <label>Filter by tag<select [ngModel]="tagFilter()" (ngModelChange)="tagFilter.set($event)"><option value="">All tags</option>@for(tag of catalogue();track tag.id){<option [value]="tag.id">{{tag.name}}</option>}<option value="untagged">Untagged</option></select></label>
-  @if (loading()) {
-    <p role="status">Loading guests…</p>
-  } @else {
+  @if (read.loaded()) {
     <div class="guest-list-toolbar">
-      <button type="button" class="secondary" (click)="load()">Refresh</button>
+
       <div class="view-toggle" role="group" aria-label="Guest view">
         <button type="button" [attr.aria-pressed]="viewMode() === 'cards'" (click)="viewMode.set('cards')">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true" focusable="false"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
@@ -143,7 +149,7 @@
         </button>
       </div>
     </div>
-    <div class="table-wrap guest-list" [class.view-cards]="viewMode() === 'cards'" [class.view-list]="viewMode() === 'list'" [attr.role]="viewMode() === 'list' ? 'region' : null" [attr.aria-label]="viewMode() === 'list' ? 'Guest list; scroll horizontally to see all columns' : null" [attr.tabindex]="viewMode() === 'list' ? 0 : null">
+    <div class="table-wrap guest-list" [attr.aria-busy]="loading()" [class.view-cards]="viewMode() === 'cards'" [class.view-list]="viewMode() === 'list'" [attr.role]="viewMode() === 'list' ? 'region' : null" [attr.aria-label]="viewMode() === 'list' ? 'Guest list; scroll horizontally to see all columns' : null" [attr.tabindex]="viewMode() === 'list' ? 0 : null">
       <table class="guest-table" role="table" aria-label="Guests and invitations">
         <thead role="rowgroup">
           <tr role="row">
@@ -195,14 +201,14 @@
                       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true" focusable="false"><path d="M20 10c0 6-8 12-8 12S4 16 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
                     </a>
                   }
-                  <button type="button" class="icon-action" (click)="edit(guest)" [disabled]="saving() || importing()" [attr.aria-label]="'Edit guest ' + guest.name" title="Edit guest">
+                  <button type="button" class="icon-action" (click)="edit(guest)" [disabled]="loading() || saving() || importing() || needsReconcile()" [attr.aria-label]="'Edit guest ' + guest.name" title="Edit guest">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="m16 3 5 5-12 12-6 1 1-6ZM13 6l5 5M4 15l5 5"/></svg>
                   </button>
                 </div>
               </td>
             </tr>
           } @empty {
-            <tr role="row"><td role="cell" [attr.colspan]="viewMode() === 'list' ? 5 : 4">No guests match your search and tag filter.</td></tr>
+            <tr role="row"><td role="cell" [attr.colspan]="viewMode() === 'list' ? 5 : 4">@if (search() || tagFilter()) {No guests match your search and tag filter. <button type="button" class="secondary" (click)="clearFilters()">Clear filters</button>} @else {No guests yet. Add a guest or import a CSV above.}</td></tr>
           }
         </tbody>
       </table>

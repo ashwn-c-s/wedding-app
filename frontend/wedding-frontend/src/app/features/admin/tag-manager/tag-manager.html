@@ -2,7 +2,8 @@
 <dialog #dialog aria-labelledby="tag-manager-title" (cancel)="busy() && $event.preventDefault()">
   <h2 id="tag-manager-title">Manage tags</h2>
   <form (ngSubmit)="save()">
-    <fieldset [disabled]="busy()">
+    <p role="status">{{busy() ? 'Saving tag name…' : ''}}</p>
+    <fieldset [disabled]="busy()" [attr.aria-busy]="busy()">
       <label
         >Tag<select name="tag" [ngModel]="selected" (ngModelChange)="select($event)">
           @for (tag of catalogue(); track tag.id) {

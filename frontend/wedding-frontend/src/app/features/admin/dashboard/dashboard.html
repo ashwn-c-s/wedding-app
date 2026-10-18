@@ -1,9 +1,7 @@
 <main class="admin-page">
   <app-admin-nav />
   <h1>RSVP dashboard</h1>
-  @if (error()) {
-    <p class="error" role="alert">{{ error() }}</p>
-  }
+  <app-admin-read-status [state]="read" label="RSVP results" shape="metrics" (retry)="load()" />
   <div class="filters">
     <label
       >Search guest<input
@@ -20,10 +18,8 @@
     >
     @if(auth.role()==='full'){<label>Tag<select [ngModel]="tagId()" (ngModelChange)="tagId.set($event)"><option value="">All tags</option>@for(tag of data().tags || [];track tag.id){<option [value]="tag.id">{{tag.name}}</option>}<option value="untagged">Untagged</option></select></label>}
   </div>
-  @if (loading()) {
-    <p role="status">Loading RSVP results…</p>
-  } @else {
-    <div class="metrics">
+  @if (read.loaded()) {
+    <div class="dashboard-results" [attr.aria-busy]="loading()">    <div class="metrics">
       <div class="metric">
         <strong>{{ summary().invited }}</strong
         >Invitations
@@ -84,8 +80,8 @@
         </table>
       </div>
     </section>
-    <button (click)="exportCsv()" [disabled]="rows().length === 0">Export filtered CSV</button
-    ><button class="secondary" (click)="load()">Refresh</button>
+    <button (click)="exportCsv()" [disabled]="loading() || rows().length === 0">Export filtered CSV</button
+    >
     <div class="table-wrap">
       <table>
         <thead>
@@ -106,11 +102,12 @@
             </tr>
           } @empty {
             <tr>
-              <td colspan="4">No invitations match these filters.</td>
+              <td colspan="4">@if(search() || eventId() || tagId()) {No invitations match these filters. <button type="button" class="secondary" (click)="clearFilters()">Clear filters</button>} @else {No invitations yet.}</td>
             </tr>
           }
         </tbody>
       </table>
+    </div>
     </div>
   }
 </main>

@@ -1,3 +1,5 @@
+import { AdminReadState, adminRead } from '../../../core/utils/admin-read-state';
+import { AdminReadStatus } from '../read-status/read-status';
 import { Component, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
@@ -29,15 +31,18 @@ export function validateEvent(event: EventUpdate): string {
   if (event.maps_url) { try { if (new URL(event.maps_url).protocol !== 'https:') return 'Maps link must use https.'; } catch { return 'Enter a valid maps link.'; } }
   return '';
 }
-@Component({selector:'app-admin-events',imports:[FormsModule,AdminNav],templateUrl:'./events.html',styleUrl:'../admin.scss'})
+@Component({selector:'app-admin-events',imports:[FormsModule,AdminNav,AdminReadStatus],templateUrl:'./events.html',styleUrl:'../admin.scss'})
 export class Events {
-  private api = inject(AdminService); events = signal<Event[]>([]); loading = signal(true); saving = signal(false); creating = false; slug = ''; selectedId = ''; dateInput = ''; private originalDateInput = ''; draft: EventUpdate | null = null; error = signal(''); notice = signal('');
+  private api = inject(AdminService); events = signal<Event[]>([]); readonly read = new AdminReadState(); loading = this.read.loading; needsReconcile = signal(false); saving = signal(false); creating = false; slug = ''; selectedId = ''; dateInput = ''; private originalDateInput = ''; draft: EventUpdate | null = null; error = signal(''); notice = signal('');
   constructor(){void this.load();}
-  async load(){this.loading.set(true);this.error.set('');try{this.events.set((await firstValueFrom(this.api.events())).events);}catch{this.error.set('Unable to load events. Check your session and try again.');}finally{this.loading.set(false);}}
+  async load(){
+    if(this.saving()) return false;
+    return this.read.run(() => adminRead(this.api.events()), value => {this.events.set(value.events);this.needsReconcile.set(false);}, 'Unable to load events. Please retry.');
+  }
   select(id: string){this.creating=false;this.selectedId=id;this.error.set('');this.notice.set(''); const event=this.events().find(event=>event.id===id); this.draft=event ? {name:event.name,date:event.date,time_label:event.time_label,venue_name:event.venue_name,venue_address:event.venue_address,maps_url:event.maps_url,directions_text:event.directions_text,is_visible:event.is_visible} : null; this.dateInput=event ? kolkataDateInput(event.date) : ''; this.originalDateInput=this.dateInput;}
   add(){this.creating=true;this.selectedId='';this.slug='';this.dateInput='';this.originalDateInput='';this.draft={name:'',date:'',time_label:'',venue_name:'',venue_address:'',maps_url:'',directions_text:'',is_visible:true};this.error.set('');this.notice.set('');}
-  async save(){if(this.saving() || !this.draft)return; const date=this.dateInput === this.originalDateInput ? this.draft.date : kolkataTimestamp(this.dateInput); const update={...this.draft,name:this.draft.name.trim(),date}; const error=validateEvent(update);this.error.set(error);if(error)return;this.saving.set(true);this.notice.set('');
+  async save(){if(this.saving() || !this.draft || this.needsReconcile())return; const date=this.dateInput === this.originalDateInput ? this.draft.date : kolkataTimestamp(this.dateInput); const update={...this.draft,name:this.draft.name.trim(),date}; const error=validateEvent(update);this.error.set(error);if(error)return;this.read.cancel();this.saving.set(true);this.notice.set('');
     if(this.creating && !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(this.slug.trim())){this.error.set('Enter a unique slug using lowercase letters, numbers and hyphens.');this.saving.set(false);return;}
     try{const wasCreating=this.creating;const {event}=await firstValueFrom(wasCreating?this.api.createEvent({...update,slug:this.slug.trim()}):this.api.saveEvent(this.selectedId,update));this.events.update(events=>[...events.filter(existing=>existing.id!==event.id),event].sort((a,b)=>a.date.localeCompare(b.date)));this.select(event.id);this.notice.set(wasCreating?'Event created. Assign it to guests from the Guests page.':'Event saved.');}
-    catch(error){this.error.set(error instanceof HttpErrorResponse && typeof error.error?.error === 'string' ? error.error.error : 'Unable to save this event. Please try again.');}finally{this.saving.set(false);}}
+    catch(error){if(!(error instanceof HttpErrorResponse) || error.status===0 || error.status>=500)this.needsReconcile.set(true);this.error.set(error instanceof HttpErrorResponse && typeof error.error?.error === 'string' ? error.error.error : 'Unable to confirm this event save. Refresh events before trying again.');}finally{this.saving.set(false);}}
 }
