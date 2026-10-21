@@ -1,0 +1,293 @@
+<main class="overview-page">
+  <nav class="admin-nav" aria-label="Administration">
+    <a routerLink="/admin/dashboard-v2" aria-current="page" class="active"
+      >Overview <span class="version">v2</span></a
+    >
+    <a routerLink="/admin/dashboard">Existing dashboard</a>
+    @if (auth.role() === 'full') {
+      <a routerLink="/admin/guests">Guests</a>
+      <a routerLink="/admin/events">Events</a>
+      <a routerLink="/admin/gallery">Photos</a>
+    }
+    <button type="button" class="signout" (click)="logout()" [disabled]="logoutBusy()">
+      {{ logoutBusy() ? 'Signing out…' : 'Sign out' }}
+    </button>
+  </nav>
+  @if (logoutError()) {
+    <p class="error" role="alert">{{ logoutError() }}</p>
+  }
+
+  <header class="page-heading">
+    <p class="eyebrow">EVENT PLANNING</p>
+    <h1>Invitation overview</h1>
+    <p>Plan from your invitation list.</p>
+  </header>
+
+  <section class="read-status" aria-label="Invitation overview loading status">
+    <div class="read-toolbar">
+      <p role="status" aria-live="polite">
+        @if (loading()) {
+          {{ read.loaded() ? 'Refreshing invitations…' : 'Loading invitations…' }}
+          @if (read.slow()) {
+            <span>This is taking longer than usual.</span>
+          }
+        } @else if (read.loaded() && !read.error()) {
+          Updated {{ lastRefreshed() | date: 'shortTime' }}
+        }
+      </p>
+      <button type="button" class="secondary" (click)="load()" [disabled]="loading()">
+        {{ read.error() ? 'Retry' : loading() && read.loaded() ? 'Refreshing…' : 'Refresh' }}
+      </button>
+    </div>
+    @if (read.error()) {
+      <p class="error" role="alert">
+        {{ read.error() }}
+        @if (read.loaded()) {
+          Showing previously loaded data.
+        }
+      </p>
+    }
+    @if (!read.loaded() && loading()) {
+      <div class="skeletons" aria-hidden="true">
+        <div></div>
+        <div></div>
+        <div></div>
+      </div>
+    }
+  </section>
+
+  @if (read.loaded()) {
+    <div class="dashboard-results" [attr.aria-busy]="loading()">
+      <section class="filter-panel" aria-label="Filter invitations">
+        <label class="event-filter"
+          >Event
+          <select [ngModel]="eventId()" (ngModelChange)="eventId.set($event)">
+            <option value="">All events</option>
+            @for (event of data().events; track event.id) {
+              <option [value]="event.id">{{ event.name }}</option>
+            }
+          </select>
+        </label>
+        <details
+          class="filters"
+          #filterPanel
+          (keydown.escape)="filterPanel.open = false; filterSummary.focus()"
+        >
+          <summary #filterSummary>
+            Filters
+            @if (activeFilterCount()) {
+              <span class="filter-count">{{ activeFilterCount() }} active</span>
+            }
+          </summary>
+          <div class="filter-options">
+            <label
+              >Search guests<input
+                type="search"
+                placeholder="Search by guest name"
+                [ngModel]="search()"
+                (ngModelChange)="search.set($event)"
+            /></label>
+            @if (auth.role() === 'full') {
+              <fieldset>
+                <legend>
+                  Tags <span class="selection">{{ selectedTagsLabel() }}</span>
+                </legend>
+                <p class="hint">Match any selected tag.</p>
+                <div class="tag-options">
+                  @for (tag of overview().tags; track tag.id) {
+                    <label
+                      ><input
+                        type="checkbox"
+                        [ngModel]="tagIds().includes(tag.id)"
+                        (ngModelChange)="toggleTag(tag.id, $event)"
+                      />{{ tag.name }}</label
+                    >
+                  }
+                  <label
+                    ><input
+                      type="checkbox"
+                      [ngModel]="tagIds().includes('untagged')"
+                      (ngModelChange)="toggleTag('untagged', $event)"
+                    />Untagged</label
+                  >
+                </div>
+              </fieldset>
+            }
+            <button
+              type="button"
+              class="secondary"
+              (click)="clearFilters()"
+              [disabled]="!activeFilterCount()"
+            >
+              Clear all filters
+            </button>
+          </div>
+        </details>
+      </section>
+
+      <section class="total-card" aria-label="Invitation totals">
+        <p class="total-label">
+          People invited
+          @if (activeFilterCount()) {
+            <span class="scope-badge">Filtered</span>
+          }
+        </p>
+        <strong class="total-number">{{ overview().filtered.peopleInvited | number }}</strong>
+        <p class="party-total">
+          Across <strong>{{ overview().filtered.invited | number }}</strong> invitation parties
+        </p>
+        @if (activeFilterCount()) {
+          <p class="total-context">
+            {{ overview().overall.peopleInvited | number }} people across
+            {{ overview().overall.invited | number }} parties in the full guest list
+          </p>
+        }
+        <p class="total-note">
+          Based on recorded party sizes. A party is counted once overall, even when invited to
+          several events.
+        </p>
+      </section>
+
+      @if (!overview().filtered.invited && activeFilterCount()) {
+        <div class="empty-state">
+          <p>No invitations match these filters.</p>
+          <button type="button" class="secondary" (click)="clearFilters()">Clear filters</button>
+        </div>
+      }
+      <section aria-labelledby="events-title" class="events-section">
+        <div class="section-heading">
+          <div>
+            <h2 id="events-title">Invitations by event</h2>
+            <p>Headcounts for each celebration.</p>
+          </div>
+          <span class="count-badge">{{ overview().events.length }}</span>
+        </div>
+        <div class="event-grid">
+          @for (event of overview().events; track event.id) {
+            <article class="event-card">
+              <h3>{{ event.name }}</h3>
+              <p class="event-total">
+                <strong>{{ event.peopleInvited | number }}</strong> people
+              </p>
+              <p class="hint">{{ event.invited | number }} invitation parties</p>
+              @if (auth.role() === 'full') {
+                <details class="breakdown">
+                  <summary>Breakdown by tag</summary>
+                  <div class="tag-breakdown">
+                    @for (tag of event.tags; track tag.id) {
+                      <div class="tag-row">
+                        <div class="tag-label">
+                          <span>{{ tag.name }}</span
+                          ><strong>{{ tag.peopleInvited | number }} <span>people</span></strong>
+                        </div>
+                        <div class="bar-track" aria-hidden="true">
+                          <div
+                            [style.width.%]="tagWidth(tag.peopleInvited, event.peopleInvited)"
+                          ></div>
+                        </div>
+                        <p>{{ tag.invited | number }} invitation parties</p>
+                      </div>
+                    } @empty {
+                      <p class="empty-inline">No invitations assigned to this event.</p>
+                    }
+                    @if (event.tags.length) {
+                      <p class="hint overlap-note">
+                        Parties can have several tags, so tag totals may overlap.
+                      </p>
+                    }
+                  </div>
+                </details>
+              }
+            </article>
+          } @empty {
+            <p class="empty-state">No events available.</p>
+          }
+        </div>
+        <p class="hint event-note">
+          People assigned to several events appear in each event; event totals should not be added.
+        </p>
+      </section>
+
+      @if (!eventId() && overview().unassigned.invited) {
+        <aside class="unassigned">
+          <strong>No event assigned</strong>
+          <p>
+            {{ overview().unassigned.peopleInvited | number }} people across
+            {{ overview().unassigned.invited | number }} invitation parties. Included in the total
+            above.
+          </p>
+        </aside>
+      }
+
+      <details class="guest-details">
+        <summary>
+          Guest details
+          <span class="count-badge">{{ overview().filtered.invited | number }} parties</span>
+        </summary>
+        <div class="guest-content">
+          <table role="table">
+            <thead role="rowgroup">
+              <tr role="row">
+                <th scope="col" role="columnheader">Guest</th>
+                <th scope="col" role="columnheader">Party size</th>
+                <th scope="col" role="columnheader">Assigned events</th>
+                @if (auth.role() === 'full') {
+                  <th scope="col" role="columnheader">Tags</th>
+                }
+              </tr>
+            </thead>
+            <tbody role="rowgroup">
+              @for (guest of overview().guests; track guest.id) {
+                <tr role="row">
+                  <td role="cell" data-label="Guest" class="guest-name">{{ guest.name }}</td>
+                  <td role="cell" data-label="Party size">
+                    {{ guest.party_size | number }} people
+                  </td>
+                  <td role="cell" data-label="Assigned events">{{ eventNames(guest) }}</td>
+                  @if (auth.role() === 'full') {
+                    <td role="cell" data-label="Tags">
+                      <div class="guest-tags">
+                        @for (tag of guest.tags || []; track tag.id) {
+                          <span>{{ tag.name }}</span>
+                        } @empty {
+                          <span>Untagged</span>
+                        }
+                      </div>
+                    </td>
+                  }
+                </tr>
+              } @empty {
+                <tr role="row">
+                  <td
+                    role="cell"
+                    [attr.colspan]="auth.role() === 'full' ? 4 : 3"
+                    class="empty-state"
+                  >
+                    @if (activeFilterCount()) {
+                      No invitations match these filters.
+                      <button type="button" class="secondary" (click)="clearFilters()">
+                        Clear filters
+                      </button>
+                    } @else {
+                      No invitations yet.
+                    }
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </details>
+      <footer class="planning-footer">
+        <p>Headcounts reflect your invitation list.</p>
+        <button
+          type="button"
+          (click)="exportCsv()"
+          [disabled]="loading() || !overview().guests.length"
+        >
+          Export planning CSV
+        </button>
+      </footer>
+    </div>
+  }
+</main>

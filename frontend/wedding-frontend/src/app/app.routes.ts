@@ -17,6 +17,7 @@ export const routes: Routes = [
   { path: 'invalid-invite', title: 'Ashwin & Amritha · Wedding invitation', loadComponent: landing },
   { path: 'admin/login', title: 'Admin login · Wedding invitation', loadComponent: () => import('./features/admin/login/login').then(m => m.Login) },
   { path: 'admin/dashboard', title: 'RSVP dashboard · Wedding invitation', canActivate: [adminGuard], loadComponent: () => import('./features/admin/dashboard/dashboard').then(m => m.Dashboard) },
+  { path: 'admin/dashboard-v2', title: 'Invitation overview · Wedding administration', canActivate: [adminGuard], loadComponent: () => import('./features/admin/dashboard-v2/dashboard-v2').then(m => m.DashboardV2) },
   { path: 'admin/rsvps', redirectTo: 'admin/dashboard', pathMatch: 'full' },
   { path: 'admin/guests', title: 'Guest management · Wedding invitation', canActivate: [adminGuard, fullAdminGuard], loadComponent: () => import('./features/admin/guests/guests').then(m => m.Guests) },
   { path: 'admin/gallery', title: 'Photo management · Wedding invitation', canActivate: [adminGuard, fullAdminGuard], loadComponent: () => import('./features/admin/gallery/gallery').then(m => m.AdminGallery) },
