@@ -30,7 +30,7 @@ describe('Event invitation totals',()=>{
       ['Wedding','3','10'],['Reception','2','7'],['Other event','0','0'],
     ]);
     expect(section.textContent).not.toContain('Confirmed');expect(section.textContent).not.toContain('Declined');
-    expect(fixture.nativeElement.querySelector('.metrics').textContent).toContain('Confirmed invitations');
+    expect(fixture.nativeElement.querySelector('[aria-label="Invitation totals"]').textContent).not.toContain('Confirmed invitations');
   });
   it('respects search, event and tag filters without counting a party twice',async()=>{
     const component=TestBed.runInInjectionContext(()=>new Dashboard());await component.load();

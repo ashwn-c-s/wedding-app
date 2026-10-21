@@ -44,6 +44,20 @@ export class Dashboard {
         return {id: event.id, name: event.name, invited: totals.invited, peopleInvited: totals.peopleInvited};
       }),
   );
+  tagSummary = computed(() => {
+    if (this.auth.role() !== 'full') return [];
+    const guests = [...new Map(this.taggedData().guests
+      .filter(guest => guest.name.toLocaleLowerCase().includes(this.search().trim().toLocaleLowerCase())
+        && (!this.eventId() || guest.event_ids.includes(this.eventId())))
+      .map(guest => [guest.id, guest])).values()];
+    const tags = this.data().tags ?? [...new Map(this.data().guests.flatMap(guest => guest.tags || []).map(tag => [tag.id, tag])).values()];
+    return [...tags, {id:'untagged',name:'Untagged'}]
+      .filter(tag => !this.tagId() || tag.id === this.tagId())
+      .map(tag => {
+        const parties = guests.filter(guest => matchesTag(guest.tags, tag.id));
+        return {...tag, invited:parties.length, peopleInvited:parties.reduce((sum, guest) => sum + guest.party_size, 0)};
+      });
+  });
   constructor() {
     void this.load();
   }

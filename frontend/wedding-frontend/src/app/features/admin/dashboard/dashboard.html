@@ -19,34 +19,37 @@
     @if(auth.role()==='full'){<label>Tag<select [ngModel]="tagId()" (ngModelChange)="tagId.set($event)"><option value="">All tags</option>@for(tag of data().tags || [];track tag.id){<option [value]="tag.id">{{tag.name}}</option>}<option value="untagged">Untagged</option></select></label>}
   </div>
   @if (read.loaded()) {
-    <div class="dashboard-results" [attr.aria-busy]="loading()">    <div class="metrics">
+    <div class="dashboard-results" [attr.aria-busy]="loading()">
+    <div class="metrics" aria-label="Invitation totals">
       <div class="metric">
         <strong>{{ summary().invited }}</strong
         >Invitations
       </div>
       <div class="metric">
         <strong>{{ summary().peopleInvited }}</strong
-        >Persons invited
-      </div>
-      <div class="metric">
-        <strong>{{ summary().confirmed }}</strong
-        >Confirmed invitations
-      </div>
-      <div class="metric">
-        <strong>{{ summary().declined }}</strong
-        >Declined invitations
-      </div>
-      <div class="metric">
-        <strong>{{ summary().pending }}</strong
-        >Pending invitations
+        >People invited
       </div>
     </div>
-    <p class="hint">
-      Counts follow the selected filters. Each invitation is one party. Pending means at least one
-      selected event awaits a response, or no events have been assigned; confirmed means all
-      responses received with at least one acceptance; declined means all selected events declined.
-      Persons use the recorded party size.
-    </p>
+    <p class="hint">Counts follow the selected filters. Each invitation is one guest party; people invited uses its recorded party size, regardless of RSVP response.</p>
+    <section aria-labelledby="event-cards-title">
+      <h2 id="event-cards-title">People invited by event</h2>
+      <div class="metrics event-metrics">
+        @for(event of eventSummary(); track event.id) {
+          <div class="metric"><h3>{{event.name}}</h3><strong>{{event.peopleInvited}}</strong><span>People invited</span></div>
+        } @empty {<p>No events available.</p>}
+      </div>
+    </section>
+    @if(auth.role() === 'full') {
+      <section aria-labelledby="tag-cards-title">
+        <h2 id="tag-cards-title">People invited by tag</h2>
+        <p class="hint">Each party counts once per tag. Parties with several tags appear in each group, so tag totals can overlap.</p>
+        <div class="metrics tag-metrics">
+          @for(tag of tagSummary(); track tag.id) {
+            <div class="metric"><h3>{{tag.name}}</h3><strong>{{tag.peopleInvited}}</strong><span>People invited</span></div>
+          }
+        </div>
+      </section>
+    }
     <section class="panel" aria-labelledby="event-attendance-title">
       <h2 id="event-attendance-title">Event attendance</h2>
       <p class="hint">Invitations count guest parties assigned to each event. People invited is the total party size, regardless of RSVP response.</p>
