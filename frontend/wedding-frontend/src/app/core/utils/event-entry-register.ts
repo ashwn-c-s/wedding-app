@@ -82,19 +82,19 @@ export function buildEntryRegister(
         characterSpacing: 1.5,
         margin: [0, 0, 0, 5],
       }),
-      fullRow({ text: heading, fontSize: 18, bold: true, margin: [0, 0, 0, 6] }),
+      fullRow({ text: heading, fontSize: 16, bold: true, margin: [0, 0, 0, 4] }),
       fullRow({
         text: appendix
           ? 'These parties have no assigned event. This appendix is not a venue admission list.'
           : eventLine,
         fontSize: 10,
-        margin: [0, 0, 0, 6],
+        margin: [0, 0, 0, 4],
       }),
       fullRow({
         text: `${total} PEOPLE INVITED | ${parties.length} INVITATION PARTIES`,
-        fontSize: 12,
+        fontSize: 11,
         bold: true,
-        margin: [0, 0, 0, 6],
+        margin: [0, 0, 0, 4],
       }),
       fullRow({
         text: appendix
@@ -110,14 +110,14 @@ export function buildEntryRegister(
         text: `Generated: ${indiaDate(generated, true)}${options.dataAsOf ? ` | Data loaded: ${indiaDate(options.dataAsOf, true)}` : ''}`,
         color: '#475569',
         fontSize: 8,
-        margin: [0, 0, 0, 12],
+        margin: [0, 0, 0, 8],
       }),
       ['No.', 'Guest / invitation', 'Invited', 'Admitted', 'Notes'].map((text) => ({
         text,
         bold: true,
         fontSize: 10,
         fillColor: '#f1f5f9',
-        margin: [0, 5, 0, 5],
+        margin: [0, 4, 0, 4],
       })),
     ];
     if (!parties.length)
@@ -134,18 +134,9 @@ export function buildEntryRegister(
       rows.push([
         { text: String(index + 1).padStart(2, '0'), fontSize: 9 },
         {
-          stack: [
-            { text: guest.name, fontSize: 12, bold: true },
-            ...(tags
-              ? [
-                  {
-                    text: tags,
-                    fontSize: 8,
-                    color: '#475569',
-                    margin: [0, 4, 0, 0] as [number, number, number, number],
-                  },
-                ]
-              : []),
+          text: [
+            { text: guest.name, fontSize: 10.5, bold: true },
+            ...(tags ? [{ text: `  |  ${tags}`, fontSize: 7.5, color: '#475569' }] : []),
           ],
         },
         { text: String(guest.party_size), alignment: 'center' },
@@ -157,11 +148,11 @@ export function buildEntryRegister(
       ...(appendix ? { pageBreak: 'before' } : {}),
       table: {
         headerRows: 7,
-        widths: [23, '*', 42, 54, 106],
+        widths: [20, '*', 38, 50, 92],
         body: rows,
         dontBreakRows: true,
         keepWithHeaderRows: 1,
-        heights: (row) => (row >= 7 ? 28 : 'auto'),
+        heights: (row) => (row >= 7 ? 15 : 'auto'),
       },
       layout: {
         hLineWidth: (index) => (index >= 6 ? 0.5 : 0),
@@ -169,8 +160,8 @@ export function buildEntryRegister(
         hLineColor: () => '#cbd5e1',
         paddingLeft: () => 5,
         paddingRight: () => 5,
-        paddingTop: (index) => (index >= 7 ? 8 : 0),
-        paddingBottom: (index) => (index >= 7 ? 8 : 0),
+        paddingTop: (index) => (index >= 7 ? 4 : 0),
+        paddingBottom: (index) => (index >= 7 ? 4 : 0),
       },
     };
   };
