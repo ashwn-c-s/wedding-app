@@ -7,6 +7,7 @@ import { AdminAuthService } from '../../../core/services/admin-auth.service';
 import { DashboardData } from '../../../core/models/admin';
 import { AdminReadState, adminRead } from '../../../core/utils/admin-read-state';
 import { buildCsv } from '../../../core/utils/admin';
+import { EventRegisterExport } from '../event-register-export/event-register-export';
 import {
   invitationOverview,
   invitationPlanningRows,
@@ -14,7 +15,7 @@ import {
 
 @Component({
   selector: 'app-dashboard-v2',
-  imports: [FormsModule, RouterLink, DecimalPipe, DatePipe],
+  imports: [FormsModule, RouterLink, DecimalPipe, DatePipe, EventRegisterExport],
   templateUrl: './dashboard-v2.html',
   styleUrl: './dashboard-v2.scss',
 })

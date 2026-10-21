@@ -1,0 +1,70 @@
+<details class="pdf-panel">
+  <summary>Export event entry register <span>PDF</span></summary>
+  <div class="pdf-options">
+    <p>
+      A printable, alphabetical guest list with invited party sizes and space to record admissions.
+      No RSVP filtering.
+    </p>
+    <label
+      >Register for event
+      <select
+        [ngModel]="selectedEventId()"
+        (ngModelChange)="chosenEventId.set($event)"
+        [disabled]="disabled() || busy()"
+      >
+        @for (event of data().events; track event.id) {
+          <option [value]="event.id">{{ event.name }}</option>
+        }
+      </select>
+    </label>
+    <label
+      >Guest list scope
+      <select
+        [ngModel]="scope()"
+        (ngModelChange)="scope.set($event)"
+        [disabled]="disabled() || busy()"
+      >
+        <option value="all">All invitation parties for this event</option>
+        <option value="filtered" [disabled]="!hasSubsetFilters()">
+          Apply current guest search and tag filters
+        </option>
+      </select>
+    </label>
+    @if (scope() === 'filtered' && hasSubsetFilters()) {
+      <p class="scope-warning">
+        Filtered register: only matching guests will be included. Every page will be clearly
+        labeled.
+      </p>
+    } @else {
+      <p>The full event list is exported, even when dashboard filters are active.</p>
+    }
+    <label class="checkbox-label"
+      ><input
+        type="checkbox"
+        [ngModel]="includeUnassigned()"
+        (ngModelChange)="includeUnassigned.set($event)"
+        [disabled]="busy() || disabled()"
+      />Include a separate unassigned invitations appendix</label
+    >
+    <p class="hint">
+      The appendix is for review, not venue admission. The main list has one row per invitation
+      party; accompanying members are not individually named.
+    </p>
+    <button
+      type="button"
+      (click)="exportPdf()"
+      [disabled]="disabled() || busy() || !selectedEventId()"
+    >
+      {{ busy() ? 'Generating PDF…' : 'Download entry register PDF' }}
+    </button>
+    @if (!selectedEventId()) {
+      <p>No events available for export.</p>
+    }
+    @if (error()) {
+      <p class="error" role="alert">{{ error() }}</p>
+    }
+    @if (success()) {
+      <p role="status">{{ success() }}</p>
+    }
+  </div>
+</details>

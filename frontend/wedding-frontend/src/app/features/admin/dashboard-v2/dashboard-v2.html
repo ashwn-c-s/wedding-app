@@ -278,6 +278,15 @@
           </table>
         </div>
       </details>
+      <app-event-register-export
+        [data]="data()"
+        [allowTags]="auth.role() === 'full'"
+        [search]="search()"
+        [tagIds]="tagIds()"
+        [eventId]="eventId()"
+        [disabled]="loading() || !!read.error()"
+        [dataAsOf]="lastRefreshed()"
+      />
       <footer class="planning-footer">
         <p>Headcounts reflect your invitation list.</p>
         <button

@@ -24,3 +24,13 @@ The planning CSV contains Guest, Party size, Event, and (for full admins) Tags. 
 The implementation includes helper and component tests for count deduplication, RSVP independence, overlapping tags/events, filtering, empty and unassigned records, restricted privacy, exports, error/retry/refresh behavior, collapsed details, and route isolation. All 144 frontend tests and the production build pass. The build reports stylesheet-size warnings for the existing public Gallery and the isolated v2 stylesheet (7.56 KB; below the 8 KB error limit).
 
 Browser visual checks on 320–430 px phones and desktop are still pending: the host Mac was locked during implementation. Before release, inspect overflow, long labels, large counts, expanded tag/guest sections, keyboard focus, and text enlargement. Publish through the existing `main` branch / Vercel workflow. The legacy dashboard remains the default route after publication.
+
+## Event entry register PDF
+
+Open **Export event entry register** in v2. Select an event, then download an A4 portrait register. The full invitation list for that event is the default, independent of dashboard search/tag filters and all RSVP responses. An explicit subset option applies current search and permitted tags; every PDF page is marked FILTERED REGISTER and repeats its scope.
+
+The mandatory alphabetical guest list has one row per party, recorded invited headcount, and blank Admitted and Notes fields. Event/date/venue, party/people totals, generation/data timestamps in India time, table headings, and page numbers repeat. Rows stay together across page breaks. Tags appear under party names only for full admins. An optional unassigned appendix starts a separate page and is marked for review, not admission.
+
+The PDF engine/fonts are loaded only when export is requested. Generation stays in the browser; no new server endpoint or database change is involved. Exports are blocked during dashboard refresh/error states. The PDF is a static paper register; writing admissions on it does not update the database.
+
+Verification: 153 frontend tests pass. A seven-page sample with 75 invitation parties and an unassigned appendix was rendered and visually inspected; text extraction confirmed unique guest rows and repeating headings/page numbers. Filtered documents were checked for repeated scope labels. Browser download behavior on physical iOS/Android remains unverified while the host Mac is locked.
