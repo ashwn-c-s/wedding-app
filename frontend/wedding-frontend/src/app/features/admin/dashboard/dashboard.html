@@ -47,33 +47,28 @@
       responses received with at least one acceptance; declined means all selected events declined.
       Persons use the recorded party size.
     </p>
-    <section class="panel">
-      <h2>Event attendance</h2>
+    <section class="panel" aria-labelledby="event-attendance-title">
+      <h2 id="event-attendance-title">Event attendance</h2>
+      <p class="hint">Invitations count guest parties assigned to each event. People invited is the total party size, regardless of RSVP response.</p>
       <div class="table-wrap">
         <table>
           <thead>
             <tr>
-              <th>Event</th>
-              <th>Invitations</th>
-              <th>Confirmed</th>
-              <th>Declined</th>
-              <th>Pending</th>
-              <th>Persons attending</th>
+              <th scope="col">Event</th>
+              <th scope="col">Invitations</th>
+              <th scope="col">People invited</th>
             </tr>
           </thead>
           <tbody>
-            @for (event of eventSummary(); track event.name) {
+            @for (event of eventSummary(); track event.id) {
               <tr>
                 <td>{{ event.name }}</td>
                 <td>{{ event.invited }}</td>
-                <td>{{ event.confirmed }}</td>
-                <td>{{ event.declined }}</td>
-                <td>{{ event.pending }}</td>
-                <td>{{ event.attendees }}</td>
+                <td>{{ event.peopleInvited }}</td>
               </tr>
             } @empty {
               <tr>
-                <td colspan="6">No events available.</td>
+                <td colspan="3">No events available.</td>
               </tr>
             }
           </tbody>

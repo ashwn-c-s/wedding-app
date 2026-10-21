@@ -28,7 +28,7 @@ describe('Tag-aware attendance and export', () => {
     component.eventId.set('event');
     expect(component.rows()).toHaveLength(1);
     expect(component.summary().peopleInvited).toBe(3);
-    expect(component.eventSummary()[0].attendees).toBe(3);
+    expect(component.eventSummary()[0].peopleInvited).toBe(3);
     expect(component.exportRows()[1].at(-1)).toBe('Office friends|School friends');
     component.tagId.set('untagged');
     expect(component.summary().pending).toBe(1);

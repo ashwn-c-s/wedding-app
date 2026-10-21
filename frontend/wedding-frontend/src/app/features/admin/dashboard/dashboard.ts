@@ -40,13 +40,8 @@ export class Dashboard {
       .events.filter((event) => !this.eventId() || event.id === this.eventId())
       .map((event) => {
         const rows = this.rows().filter((row) => row.eventId === event.id);
-        return {
-          name: event.name,
-          ...attendanceSummary(rows),
-          attendees: rows
-            .filter((row) => row.response === 'Confirmed')
-            .reduce((sum, row) => sum + row.partySize, 0),
-        };
+        const totals = attendanceSummary(rows);
+        return {id: event.id, name: event.name, invited: totals.invited, peopleInvited: totals.peopleInvited};
       }),
   );
   constructor() {
