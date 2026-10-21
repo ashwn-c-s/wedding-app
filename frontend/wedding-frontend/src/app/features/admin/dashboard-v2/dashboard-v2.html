@@ -1,21 +1,5 @@
 <main class="overview-page">
-  <nav class="admin-nav" aria-label="Administration">
-    <a routerLink="/admin/dashboard-v2" aria-current="page" class="active"
-      >Overview <span class="version">v2</span></a
-    >
-    <a routerLink="/admin/dashboard">Existing dashboard</a>
-    @if (auth.role() === 'full') {
-      <a routerLink="/admin/guests">Guests</a>
-      <a routerLink="/admin/events">Events</a>
-      <a routerLink="/admin/gallery">Photos</a>
-    }
-    <button type="button" class="signout" (click)="logout()" [disabled]="logoutBusy()">
-      {{ logoutBusy() ? 'Signing out…' : 'Sign out' }}
-    </button>
-  </nav>
-  @if (logoutError()) {
-    <p class="error" role="alert">{{ logoutError() }}</p>
-  }
+  <app-admin-nav />
 
   <header class="page-heading">
     <p class="eyebrow">EVENT PLANNING</p>

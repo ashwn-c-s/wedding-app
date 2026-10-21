@@ -1,14 +1,28 @@
 <main class="admin-page">
   <app-admin-nav />
-  <h1>Guests & invitations</h1>
+  <header class="page-heading">
+    <p class="eyebrow">GUEST MANAGEMENT</p>
+    <h1>Guests & invitations</h1>
+    <p class="page-subtitle">Manage invitation parties, event assignments and guest tags.</p>
+  </header>
   @if (error() && (feedback() === 'share' || (feedback() === 'guest' && !draft))) {
     <p role="alert" class="error">{{ error() }}</p>
   }
   @if (notice()) {
     <p role="status" class="success operation-notice">{{ notice() }}</p>
   }
-  <app-admin-read-status [state]="read" label="Guests" [shape]="viewMode() === 'cards' ? 'cards' : 'rows'" [disabled]="saving() || importing()" (retry)="load()" />
-  <button type="button" (click)="add()" [disabled]="loading() || !read.loaded() || saving() || importing() || needsReconcile()">
+  <app-admin-read-status
+    [state]="read"
+    label="Guests"
+    [shape]="viewMode() === 'cards' ? 'cards' : 'rows'"
+    [disabled]="saving() || importing()"
+    (retry)="load()"
+  />
+  <button
+    type="button"
+    (click)="add()"
+    [disabled]="loading() || !read.loaded() || saving() || importing() || needsReconcile()"
+  >
     Add guest
   </button>
   <app-tag-manager [catalogue]="catalogue()" (renamed)="renameTag($event)" />
@@ -42,8 +56,19 @@
               required
           /></label>
         </div>
-        <app-guest-location-editor [location]="guest.location || null" [session]="locationSession" (changed)="setLocation($event)" (invalid)="locationError.set($event)" (locating)="locating.set($event)" />
-        <app-tag-picker [catalogue]="catalogue()" [ids]="guest.tag_ids || []" [names]="guest.new_tags || []" (selection)="setTags($event)" />
+        <app-guest-location-editor
+          [location]="guest.location || null"
+          [session]="locationSession"
+          (changed)="setLocation($event)"
+          (invalid)="locationError.set($event)"
+          (locating)="locating.set($event)"
+        />
+        <app-tag-picker
+          [catalogue]="catalogue()"
+          [ids]="guest.tag_ids || []"
+          [names]="guest.new_tags || []"
+          (selection)="setTags($event)"
+        />
         <fieldset [disabled]="assignmentsLocked">
           <legend>Invited events</legend>
           @for (event of events(); track event.id) {
@@ -67,18 +92,46 @@
           </p>
         }
       </fieldset>
-      @if (error() && feedback() === 'guest') {<p class="error" role="alert">{{error()}}</p>}
+      @if (error() && feedback() === 'guest') {
+        <p class="error" role="alert">{{ error() }}</p>
+      }
       <p role="status">{{ saving() ? 'Saving guest details and invitations…' : '' }}</p>
-      @if(needsReconcile()){<p class="hint">Refresh guests before saving again; the last change may already have been saved.</p><button type="button" class="secondary" (click)="load()" [disabled]="loading() || saving() || importing()">Refresh guests</button>}
-        <button type="submit" [disabled]="saving() || importing() || locating() || !!locationError() || loading() || needsReconcile()">{{ saving() ? 'Saving…' : 'Save guest' }}</button
-        ><button type="button" class="secondary" [disabled]="saving()" (click)="draft = null">Cancel</button>
-
+      @if (needsReconcile()) {
+        <p class="hint">
+          Refresh guests before saving again; the last change may already have been saved.
+        </p>
+        <button
+          type="button"
+          class="secondary"
+          (click)="load()"
+          [disabled]="loading() || saving() || importing()"
+        >
+          Refresh guests
+        </button>
+      }
+      <button
+        type="submit"
+        [disabled]="
+          saving() ||
+          importing() ||
+          locating() ||
+          !!locationError() ||
+          loading() ||
+          needsReconcile()
+        "
+      >
+        {{ saving() ? 'Saving…' : 'Save guest' }}</button
+      ><button type="button" class="secondary" [disabled]="saving()" (click)="draft = null">
+        Cancel
+      </button>
     </form>
   }
-  <section class="panel">
-    <h2>Import guests</h2>
+  <details class="panel import-panel">
+    <summary>Import guests from CSV</summary>
     <p class="hint">
-      CSV columns: name, phone, party_size, events, with an optional final tags column. Separate tags with | (for example Office friends|School friends). Imported tags are added; blank or omitted tags keep existing labels. Use event slugs joined with + (for example
+      CSV columns: name, phone, party_size, events, with an optional final tags column. Separate
+      tags with | (for example Office friends|School friends). Imported tags are added; blank or
+      omitted tags keep existing labels. Use event slugs joined with + (for example
       wedding+reception). Quote fields containing commas. Phone numbers identify duplicates. Each
       row is reported separately; successful rows are saved even if other rows fail.
     </p>
@@ -96,10 +149,32 @@
         placeholder="name,phone,party_size,events"
       ></textarea>
     </label>
-    @if (error() && feedback() === 'import') {<p class="error" role="alert">{{error()}}</p>}
-    <p role="status">{{ importing() ? 'Importing guests. Please keep this page open; results will appear below.' : '' }}</p>
-    @if(needsReconcile() && feedback() === 'import'){<p class="hint">Refresh before another import; some rows may already have been saved.</p><button type="button" class="secondary" (click)="load()" [disabled]="loading() || saving() || importing()">Refresh guests</button>}
-    <button type="button" (click)="importCsv()" [disabled]="importing() || loading() || !read.loaded() || saving() || needsReconcile()">
+    @if (error() && feedback() === 'import') {
+      <p class="error" role="alert">{{ error() }}</p>
+    }
+    <p role="status">
+      {{
+        importing()
+          ? 'Importing guests. Please keep this page open; results will appear below.'
+          : ''
+      }}
+    </p>
+    @if (needsReconcile() && feedback() === 'import') {
+      <p class="hint">Refresh before another import; some rows may already have been saved.</p>
+      <button
+        type="button"
+        class="secondary"
+        (click)="load()"
+        [disabled]="loading() || saving() || importing()"
+      >
+        Refresh guests
+      </button>
+    }
+    <button
+      type="button"
+      (click)="importCsv()"
+      [disabled]="importing() || loading() || !read.loaded() || saving() || needsReconcile()"
+    >
       {{ importing() ? 'Importing…' : 'Validate & import' }}
     </button>
     @if (report(); as result) {
@@ -127,29 +202,76 @@
         </table>
       </div>
     }
-  </section>
+  </details>
   <label
     >Search by name or phone<input
       type="search"
       [ngModel]="search()"
       (ngModelChange)="search.set($event)"
   /></label>
-  <label>Filter by tag<select [ngModel]="tagFilter()" (ngModelChange)="tagFilter.set($event)"><option value="">All tags</option>@for(tag of catalogue();track tag.id){<option [value]="tag.id">{{tag.name}}</option>}<option value="untagged">Untagged</option></select></label>
+  <label
+    >Filter by tag<select [ngModel]="tagFilter()" (ngModelChange)="tagFilter.set($event)">
+      <option value="">All tags</option>
+      @for (tag of catalogue(); track tag.id) {
+        <option [value]="tag.id">{{ tag.name }}</option>
+      }
+      <option value="untagged">Untagged</option>
+    </select></label
+  >
   @if (read.loaded()) {
     <div class="guest-list-toolbar">
-
       <div class="view-toggle" role="group" aria-label="Guest view">
-        <button type="button" [attr.aria-pressed]="viewMode() === 'cards'" (click)="viewMode.set('cards')">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true" focusable="false"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+        <button
+          type="button"
+          [attr.aria-pressed]="viewMode() === 'cards'"
+          (click)="viewMode.set('cards')"
+        >
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.8"
+            aria-hidden="true"
+            focusable="false"
+          >
+            <rect x="3" y="3" width="7" height="7" rx="1" />
+            <rect x="14" y="3" width="7" height="7" rx="1" />
+            <rect x="3" y="14" width="7" height="7" rx="1" />
+            <rect x="14" y="14" width="7" height="7" rx="1" />
+          </svg>
           Cards
         </button>
-        <button type="button" [attr.aria-pressed]="viewMode() === 'list'" (click)="viewMode.set('list')">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true" focusable="false"><path d="M8 5h13M8 12h13M8 19h13M3 5h.01M3 12h.01M3 19h.01"/></svg>
+        <button
+          type="button"
+          [attr.aria-pressed]="viewMode() === 'list'"
+          (click)="viewMode.set('list')"
+        >
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.8"
+            stroke-linecap="round"
+            aria-hidden="true"
+            focusable="false"
+          >
+            <path d="M8 5h13M8 12h13M8 19h13M3 5h.01M3 12h.01M3 19h.01" />
+          </svg>
           List
         </button>
       </div>
     </div>
-    <div class="table-wrap guest-list" [attr.aria-busy]="loading()" [class.view-cards]="viewMode() === 'cards'" [class.view-list]="viewMode() === 'list'" [attr.role]="viewMode() === 'list' ? 'region' : null" [attr.aria-label]="viewMode() === 'list' ? 'Guest list; scroll horizontally to see all columns' : null" [attr.tabindex]="viewMode() === 'list' ? 0 : null">
+    <div
+      class="table-wrap guest-list"
+      [attr.aria-busy]="loading()"
+      [class.view-cards]="viewMode() === 'cards'"
+      [class.view-list]="viewMode() === 'list'"
+      [attr.role]="viewMode() === 'list' ? 'region' : null"
+      [attr.aria-label]="
+        viewMode() === 'list' ? 'Guest list; scroll horizontally to see all columns' : null
+      "
+      [attr.tabindex]="viewMode() === 'list' ? 0 : null"
+    >
       <table class="guest-table" role="table" aria-label="Guests and invitations">
         <thead role="rowgroup">
           <tr role="row">
@@ -159,7 +281,9 @@
             }
             <th scope="col" role="columnheader">Party size</th>
             <th scope="col" role="columnheader">Invited events</th>
-            <th scope="col" role="columnheader">{{ viewMode() === 'list' ? 'Edit' : 'Actions' }}</th>
+            <th scope="col" role="columnheader">
+              {{ viewMode() === 'list' ? 'Edit' : 'Actions' }}
+            </th>
           </tr>
         </thead>
         <tbody role="rowgroup">
@@ -168,47 +292,173 @@
               <td class="guest-details" role="cell">
                 <strong class="guest-name">{{ guest.name }}</strong>
                 @if (viewMode() === 'cards') {
-                <span class="guest-phone">{{ guest.phone }}</span>
-                <div class="guest-tags" aria-label="Guest tags">
-                  @for(tag of guest.tags || []; track tag.id) {
-                    <span class="guest-tag">{{ tag.name }}</span>
-                  } @empty {
-                    <span class="hint">Untagged</span>
-                  }
-                </div>
+                  <span class="guest-phone">{{ guest.phone }}</span>
+                  <div class="guest-tags" aria-label="Guest tags">
+                    @for (tag of guest.tags || []; track tag.id) {
+                      <span class="guest-tag">{{ tag.name }}</span>
+                    } @empty {
+                      <span class="hint">Untagged</span>
+                    }
+                  </div>
                 }
               </td>
               @if (viewMode() === 'list') {
                 <td class="guest-phone-cell" role="cell">{{ guest.phone }}</td>
               }
-              <td class="guest-party" role="cell">@if (viewMode() === 'cards') {<span class="mobile-label" aria-hidden="true">Party size</span>}{{ guest.party_size }}</td>
-              <td class="guest-events" role="cell">@if (viewMode() === 'cards') {<span class="mobile-label" aria-hidden="true">Invited events</span>}{{ eventNames(guest) }}</td>
+              <td class="guest-party" role="cell">
+                @if (viewMode() === 'cards') {
+                  <span class="mobile-label" aria-hidden="true">Party size</span>
+                }
+                {{ guest.party_size }}
+              </td>
+              <td class="guest-events" role="cell">
+                @if (viewMode() === 'cards') {
+                  <span class="mobile-label" aria-hidden="true">Invited events</span>
+                }
+                {{ eventNames(guest) }}
+              </td>
               <td class="guest-actions-cell" role="cell">
-                <div class="guest-actions" role="group" [attr.aria-label]="'Actions for ' + guest.name">
+                <div
+                  class="guest-actions"
+                  role="group"
+                  [attr.aria-label]="'Actions for ' + guest.name"
+                >
                   @if (viewMode() === 'cards') {
-                  <button type="button" class="icon-action" (click)="copy(guest)" [attr.aria-label]="'Copy invitation for ' + guest.name" title="Copy invitation">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="7" y="4" width="10" height="4" rx="1"/><path d="M7 6H5v15h14V6h-2M9 12h6m-6 4h6"/></svg>
-                  </button>
-                  <a class="icon-action whatsapp-action" [href]="whatsapp(guest)" target="_blank" rel="noopener noreferrer" [attr.aria-label]="'WhatsApp invitation for ' + guest.name + ' (opens in a new tab)'" title="WhatsApp">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M21 11.5a9 9 0 0 1-13.3 7.9L3 21l1.6-4.7A9 9 0 1 1 21 11.5Z"/><path d="M8.2 7.5c-.8.5-.7 2.5 1.6 4.8s4.3 2.4 4.8 1.6l.9-1.2-2.4-1.2-.9.9a7 7 0 0 1-2.4-2.4l.9-.9-1.2-2.4Z"/></svg>
-                  </a>
-                  <a class="icon-action" [href]="link(guest)" target="_blank" rel="noopener noreferrer" [attr.aria-label]="'Open invitation for ' + guest.name + ' (opens in a new tab)'" title="Open invitation">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="m10 13 4-4m-6 6-1 1a3.5 3.5 0 0 1-5-5l4-4a3.5 3.5 0 0 1 5 0m2 2 1-1a3.5 3.5 0 0 1 5 5l-4 4a3.5 3.5 0 0 1-5 0" transform="translate(1 1)"/></svg>
-                  </a>
-                  }
-                  @if (viewMode() === 'cards' && locationUrl(guest.location); as locationLink) {
-                    <a class="icon-action" [href]="locationLink" target="_blank" rel="noopener noreferrer" [attr.aria-label]="'Open guest location for ' + guest.name + ' (opens in a new tab)'" title="Guest location">
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true" focusable="false"><path d="M20 10c0 6-8 12-8 12S4 16 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+                    <button
+                      type="button"
+                      class="icon-action"
+                      (click)="copy(guest)"
+                      [attr.aria-label]="'Copy invitation for ' + guest.name"
+                      title="Copy invitation"
+                    >
+                      <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="1.8"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        aria-hidden="true"
+                        focusable="false"
+                      >
+                        <rect x="7" y="4" width="10" height="4" rx="1" />
+                        <path d="M7 6H5v15h14V6h-2M9 12h6m-6 4h6" />
+                      </svg>
+                    </button>
+                    <a
+                      class="icon-action whatsapp-action"
+                      [href]="whatsapp(guest)"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      [attr.aria-label]="
+                        'WhatsApp invitation for ' + guest.name + ' (opens in a new tab)'
+                      "
+                      title="WhatsApp"
+                    >
+                      <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="1.8"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        aria-hidden="true"
+                        focusable="false"
+                      >
+                        <path d="M21 11.5a9 9 0 0 1-13.3 7.9L3 21l1.6-4.7A9 9 0 1 1 21 11.5Z" />
+                        <path
+                          d="M8.2 7.5c-.8.5-.7 2.5 1.6 4.8s4.3 2.4 4.8 1.6l.9-1.2-2.4-1.2-.9.9a7 7 0 0 1-2.4-2.4l.9-.9-1.2-2.4Z"
+                        />
+                      </svg>
+                    </a>
+                    <a
+                      class="icon-action"
+                      [href]="link(guest)"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      [attr.aria-label]="
+                        'Open invitation for ' + guest.name + ' (opens in a new tab)'
+                      "
+                      title="Open invitation"
+                    >
+                      <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="1.8"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        aria-hidden="true"
+                        focusable="false"
+                      >
+                        <path
+                          d="m10 13 4-4m-6 6-1 1a3.5 3.5 0 0 1-5-5l4-4a3.5 3.5 0 0 1 5 0m2 2 1-1a3.5 3.5 0 0 1 5 5l-4 4a3.5 3.5 0 0 1-5 0"
+                          transform="translate(1 1)"
+                        />
+                      </svg>
                     </a>
                   }
-                  <button type="button" class="icon-action" (click)="edit(guest)" [disabled]="loading() || saving() || importing() || needsReconcile()" [attr.aria-label]="'Edit guest ' + guest.name" title="Edit guest">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="m16 3 5 5-12 12-6 1 1-6ZM13 6l5 5M4 15l5 5"/></svg>
+                  @if (viewMode() === 'cards' && locationUrl(guest.location); as locationLink) {
+                    <a
+                      class="icon-action"
+                      [href]="locationLink"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      [attr.aria-label]="
+                        'Open guest location for ' + guest.name + ' (opens in a new tab)'
+                      "
+                      title="Guest location"
+                    >
+                      <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="1.8"
+                        aria-hidden="true"
+                        focusable="false"
+                      >
+                        <path d="M20 10c0 6-8 12-8 12S4 16 4 10a8 8 0 1 1 16 0Z" />
+                        <circle cx="12" cy="10" r="3" />
+                      </svg>
+                    </a>
+                  }
+                  <button
+                    type="button"
+                    class="icon-action"
+                    (click)="edit(guest)"
+                    [disabled]="loading() || saving() || importing() || needsReconcile()"
+                    [attr.aria-label]="'Edit guest ' + guest.name"
+                    title="Edit guest"
+                  >
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="1.8"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      aria-hidden="true"
+                      focusable="false"
+                    >
+                      <path d="m16 3 5 5-12 12-6 1 1-6ZM13 6l5 5M4 15l5 5" />
+                    </svg>
                   </button>
                 </div>
               </td>
             </tr>
           } @empty {
-            <tr role="row"><td role="cell" [attr.colspan]="viewMode() === 'list' ? 5 : 4">@if (search() || tagFilter()) {No guests match your search and tag filter. <button type="button" class="secondary" (click)="clearFilters()">Clear filters</button>} @else {No guests yet. Add a guest or import a CSV above.}</td></tr>
+            <tr role="row">
+              <td role="cell" [attr.colspan]="viewMode() === 'list' ? 5 : 4">
+                @if (search() || tagFilter()) {
+                  No guests match your search and tag filter.
+                  <button type="button" class="secondary" (click)="clearFilters()">
+                    Clear filters
+                  </button>
+                } @else {
+                  No guests yet. Add a guest or import a CSV above.
+                }
+              </td>
+            </tr>
           }
         </tbody>
       </table>

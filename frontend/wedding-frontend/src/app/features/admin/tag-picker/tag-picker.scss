@@ -3,11 +3,11 @@
   margin: 1rem 0;
   color: inherit;
   font:
-    14px Arial,
+    14px 'DM Sans',
     sans-serif;
 }
 .tag-field {
-  border: 1px solid #d9cbaa;
+  border: 1px solid #e2e8f0;
   border-radius: 8px;
   padding: 1rem;
   min-width: 0;
@@ -15,7 +15,7 @@
 legend span,
 .hint {
   font-size: 13px;
-  color: #526148;
+  color: #475569;
 }
 .hint {
   line-height: 1.6;
@@ -34,14 +34,14 @@ legend span,
 }
 .chips button {
   border-radius: 24px;
-  background: #214f38;
-  color: #fffaf0;
+  background: #2563eb;
+  color: #ffffff;
   border: 0;
 }
 .suggestions button {
   background: transparent;
-  color: #214f38;
-  border: 1px solid #baaa8c;
+  color: #2563eb;
+  border: 1px solid #cbd5e1;
   border-radius: 24px;
 }
 button {
@@ -61,12 +61,12 @@ input {
   width: 100%;
   box-sizing: border-box;
   font:
-    16px Arial,
+    16px 'DM Sans',
     sans-serif;
-  color: #214f38;
-  background: #fffaf0;
+  color: #0f172a;
+  background: #ffffff;
   padding: 12px;
-  border: 1px solid #baaa8c;
+  border: 1px solid #cbd5e1;
   border-radius: 6px;
   margin-top: 6px;
 }
@@ -80,13 +80,13 @@ input {
   min-width: 0;
 }
 .add-row button {
-  border: 1px solid #214f38;
-  color: #214f38;
+  border: 1px solid #2563eb;
+  color: #2563eb;
   background: transparent;
   border-radius: 6px;
 }
 .error {
-  color: #94412e;
+  color: #9f1239;
 }
 @media (max-width: 500px) {
   .add-row {

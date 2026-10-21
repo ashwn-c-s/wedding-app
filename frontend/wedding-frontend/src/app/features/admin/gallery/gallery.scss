@@ -8,7 +8,7 @@ fieldset {
   width: 100%;
   max-height: 320px;
   object-fit: contain;
-  background: #eadfc7;
+  background: #f1f5f9;
   border-radius: 6px;
 }
 .published {
@@ -18,8 +18,8 @@ fieldset {
 }
 figure {
   margin: 0;
-  background: #fffaf0;
-  border: 1px solid #d9cbaa;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
   border-radius: 8px;
   overflow: hidden;
 }
@@ -31,7 +31,7 @@ figure img {
 figcaption {
   padding: 1rem;
   font:
-    14px Arial,
+    14px 'DM Sans',
     sans-serif;
   overflow-wrap: anywhere;
 }

@@ -86,45 +86,6 @@ h3 {
   margin: auto;
   padding: 0 16px 32px;
 }
-.admin-nav {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 4px;
-  border-bottom: 1px solid var(--line);
-  padding: 16px 0;
-  margin-bottom: 32px;
-}
-.admin-nav a {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  min-height: 44px;
-  border-radius: 9px;
-  padding: 9px 11px;
-  color: var(--muted);
-  text-decoration: none;
-  font-size: 14px;
-  font-weight: 500;
-}
-.admin-nav .active {
-  background: #eff6ff;
-  color: #1d4ed8;
-  font-weight: 700;
-}
-.admin-nav .signout {
-  background: none;
-  color: var(--muted);
-  border-color: transparent;
-  margin-left: auto;
-  padding: 9px 11px;
-}
-.version {
-  font-size: 11px;
-  padding: 1px 6px;
-  border-radius: 5px;
-  background: #dbeafe;
-}
 .page-heading > p:last-child {
   color: var(--muted);
   margin-top: 8px;
@@ -516,16 +477,6 @@ td {
   }
 }
 @media (max-width: 639px) {
-  .admin-nav {
-    margin-bottom: 24px;
-  }
-  .admin-nav a {
-    padding: 8px;
-    font-size: 12px;
-  }
-  .admin-nav .signout {
-    font-size: 12px;
-  }
   thead {
     position: absolute;
     width: 1px;

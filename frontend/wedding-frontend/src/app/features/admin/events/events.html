@@ -1,12 +1,18 @@
 <main class="admin-page">
   <app-admin-nav />
-  <h1>Event administration</h1>
+  <header class="page-heading">
+    <p class="eyebrow">EVENT SETUP</p>
+    <h1>Events</h1>
+    <p class="page-subtitle">Manage celebrations, venues and invitation details.</p>
+  </header>
   @if (notice()) {
     <p class="success operation-notice" role="status">{{ notice() }}</p>
   }
   <app-admin-read-status [state]="read" label="Events" [disabled]="saving()" (retry)="load()" />
   @if (read.loaded()) {
-    <button type="button" (click)="add()" [disabled]="saving() || loading() || needsReconcile()">Add event</button>
+    <button type="button" (click)="add()" [disabled]="saving() || loading() || needsReconcile()">
+      Add event
+    </button>
     <label
       >Choose an event<select
         [ngModel]="selectedId"
@@ -81,11 +87,26 @@
             invited guests</label
           >
         </fieldset>
-        @if(error()){<p class="error" role="alert">{{error()}}</p>}
-        <p role="status">{{saving() ? 'Saving event…' : ''}}</p>
-        @if(needsReconcile()){<p class="hint">Refresh events before saving again; the change may already have been saved.</p><button type="button" class="secondary" (click)="load()" [disabled]="loading() || saving()">Refresh events</button>}
-          <button type="submit" [disabled]="saving() || loading() || needsReconcile()">{{ saving() ? 'Saving…' : 'Save event' }}</button>
-
+        @if (error()) {
+          <p class="error" role="alert">{{ error() }}</p>
+        }
+        <p role="status">{{ saving() ? 'Saving event…' : '' }}</p>
+        @if (needsReconcile()) {
+          <p class="hint">
+            Refresh events before saving again; the change may already have been saved.
+          </p>
+          <button
+            type="button"
+            class="secondary"
+            (click)="load()"
+            [disabled]="loading() || saving()"
+          >
+            Refresh events
+          </button>
+        }
+        <button type="submit" [disabled]="saving() || loading() || needsReconcile()">
+          {{ saving() ? 'Saving…' : 'Save event' }}
+        </button>
       </form>
     }
   }

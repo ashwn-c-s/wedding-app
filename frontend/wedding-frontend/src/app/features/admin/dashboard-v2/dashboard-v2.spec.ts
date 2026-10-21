@@ -219,16 +219,15 @@ describe('Invitation overview v2', () => {
   });
 });
 
-describe('Invitation overview v2 route isolation', () => {
-  it('adds an authenticated v2 route while preserving the legacy dashboard and redirects', async () => {
+describe('Invitation overview production routes', () => {
+  it('promotes the modern overview and preserves v2 bookmarks and default redirects', async () => {
     const { routes } = await import('../../../app.routes');
     const { adminGuard } = await import('../../../core/guards/admin.guard');
-    const { Dashboard } = await import('../dashboard/dashboard');
     const legacy = routes.find((route) => route.path === 'admin/dashboard')!;
     const modern = routes.find((route) => route.path === 'admin/dashboard-v2')!;
-    expect(await legacy.loadComponent!()).toBe(Dashboard);
-    expect(await modern.loadComponent!()).toBe(DashboardV2);
-    expect(modern.canActivate).toContain(adminGuard);
+    expect(await legacy.loadComponent!()).toBe(DashboardV2);
+    expect(modern.redirectTo).toBe('admin/dashboard');
+    expect(modern.pathMatch).toBe('full');
     expect(legacy.canActivate).toContain(adminGuard);
     expect(routes.find((route) => route.path === 'admin')?.redirectTo).toBe('admin/dashboard');
     expect(routes.find((route) => route.path === 'admin/rsvps')?.redirectTo).toBe(

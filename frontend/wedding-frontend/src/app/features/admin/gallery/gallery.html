@@ -1,6 +1,10 @@
 <main class="admin-page">
   <app-admin-nav />
-  <h1>Our photo journal</h1>
+  <header class="page-heading">
+    <p class="eyebrow">PHOTO MANAGEMENT</p>
+    <h1>Photos</h1>
+    <p class="page-subtitle">Publish photographs to your wedding photo journal.</p>
+  </header>
   <p>
     Add photos to the Before the wedding or The celebration chapter. The newest photo opens the
     journal.
@@ -13,7 +17,13 @@
   @if (notice()) {
     <p class="success operation-notice" role="status">{{ notice() }}</p>
   }
-  <app-admin-read-status [state]="read" label="Photographs" shape="photos" [disabled]="busy()" (retry)="load()" />
+  <app-admin-read-status
+    [state]="read"
+    label="Photographs"
+    shape="photos"
+    [disabled]="busy()"
+    (retry)="load()"
+  />
   <form class="panel" (ngSubmit)="save(photoInput)">
     <h2>Add a photograph</h2>
     <fieldset [disabled]="busy()" [attr.aria-busy]="busy()">
@@ -26,7 +36,10 @@
           (change)="select($event)"
           [disabled]="!!pending"
       /></label>
-      <p class="hint">JPEG, PNG or WebP · up to 15 MB. One photo at a time. Photos are optimized for the web at up to 2,400 pixels.</p>
+      <p class="hint">
+        JPEG, PNG or WebP · up to 15 MB. One photo at a time. Photos are optimized for the web at up
+        to 2,400 pixels.
+      </p>
       @if (preview()) {
         <img class="upload-preview" [src]="preview()" alt="Selected photo preview" />
       }
@@ -49,25 +62,36 @@
         ></textarea>
       </label>
     </fieldset>
-    @if(error()){<p class="error" role="alert">{{error()}}</p>}
-    <p role="status" aria-live="polite">{{busy() ? stage() : ''}}</p>
-      <button type="submit" [disabled]="!file || busy() || loading() || !read.loaded()">
-        {{ busy() ? stage() : pending ? 'Retry publishing' : 'Publish photo' }}
+    @if (error()) {
+      <p class="error" role="alert">{{ error() }}</p>
+    }
+    <p role="status" aria-live="polite">{{ busy() ? stage() : '' }}</p>
+    <button type="submit" [disabled]="!file || busy() || loading() || !read.loaded()">
+      {{ busy() ? stage() : pending ? 'Retry publishing' : 'Publish photo' }}
+    </button>
+    @if (file) {
+      <button
+        type="button"
+        class="secondary"
+        [disabled]="busy()"
+        (click)="clear(); photoInput.value = ''"
+      >
+        Clear selection
       </button>
-      @if (file) {
-        <button type="button" class="secondary" [disabled]="busy()" (click)="clear(); photoInput.value = ''">
-          Clear selection
-        </button>
-      }
-      @if (pending && !busy()) {
-        <p class="hint">
-          The photo is uploaded. Retry publishing to finish without uploading it again.
-        </p>
-      }
-
+    }
+    @if (pending && !busy()) {
+      <p class="hint">
+        The photo is uploaded. Retry publishing to finish without uploading it again.
+      </p>
+    }
   </form>
   <section aria-labelledby="published-title">
-    <h2 id="published-title">Published photographs @if(read.loaded()){ · {{ photos().length }}}</h2>
+    <h2 id="published-title">
+      Published photographs
+      @if (read.loaded()) {
+        · {{ photos().length }}
+      }
+    </h2>
     @if (read.loaded() && !photos().length) {
       <p>The journal is waiting for its first photograph.</p>
     }
@@ -84,6 +108,5 @@
         </figure>
       }
     </div>
-
   </section>
 </main>

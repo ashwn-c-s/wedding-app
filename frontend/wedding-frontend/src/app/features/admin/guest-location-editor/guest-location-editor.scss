@@ -1,10 +1,77 @@
-:host { display: block; margin: 1rem 0; font-family: Arial, sans-serif; }
-section { padding: 1rem; border: 1px solid #d9cbaa; border-radius: .6rem; }
-h3 { margin: 0 0 .5rem; font-size: 1rem; } h3 span, p { font-size: .85rem; font-weight: normal; color: #526148; line-height: 1.5; }
-label { display: block; font-size: .9rem; margin: .8rem 0; }
-input,select { display: block; width: 100%; box-sizing: border-box; padding: .7rem; margin-top: .3rem; border: 1px solid #baaa8c; border-radius: .4rem; background: #fffaf0; color: #214f38; font: inherit; }
-.coordinates { display: grid; grid-template-columns: repeat(auto-fit,minmax(min(100%,160px),1fr)); gap: .75rem; }
-button { min-height: 44px; padding: .6rem .8rem; border: 1px solid #214f38; border-radius: .4rem; background: #214f38; color: #fffaf0; cursor: pointer; font: inherit; }
-button:disabled { opacity: .6; cursor: wait; } .clear { background: transparent; color: #214f38; margin: .5rem; }
-a { color: #214f38; display: inline-block; padding: .5rem 0; overflow-wrap: anywhere; } .error { color: #94412e; }
-button:focus-visible,a:focus-visible { outline: 3px solid #94412e; outline-offset: 3px; }
+:host {
+  display: block;
+  margin: 1rem 0;
+  font-family: 'DM Sans', sans-serif;
+}
+section {
+  padding: 1rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.6rem;
+}
+h3 {
+  margin: 0 0 0.5rem;
+  font-size: 1rem;
+}
+h3 span,
+p {
+  font-size: 0.85rem;
+  font-weight: normal;
+  color: #475569;
+  line-height: 1.5;
+}
+label {
+  display: block;
+  font-size: 0.9rem;
+  margin: 0.8rem 0;
+}
+input,
+select {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0.7rem;
+  margin-top: 0.3rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 0.4rem;
+  background: #ffffff;
+  color: #0f172a;
+  font: inherit;
+}
+.coordinates {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 160px), 1fr));
+  gap: 0.75rem;
+}
+button {
+  min-height: 44px;
+  padding: 0.6rem 0.8rem;
+  border: 1px solid #2563eb;
+  border-radius: 0.4rem;
+  background: #2563eb;
+  color: #ffffff;
+  cursor: pointer;
+  font: inherit;
+}
+button:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+.clear {
+  background: transparent;
+  color: #2563eb;
+  margin: 0.5rem;
+}
+a {
+  color: #2563eb;
+  display: inline-block;
+  padding: 0.5rem 0;
+  overflow-wrap: anywhere;
+}
+.error {
+  color: #9f1239;
+}
+button:focus-visible,
+a:focus-visible {
+  outline: 3px solid #2563eb;
+  outline-offset: 3px;
+}

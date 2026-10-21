@@ -1,6 +1,6 @@
-# Invitation overview v2
+# Invitation overview and admin theme
 
-The new, authenticated `/admin/dashboard-v2` route is an isolated invitation-planning dashboard. `/admin/dashboard`, `/admin/rsvps`, and the default `/admin` redirect retain their existing behavior. No backend or database changes are required.
+The authenticated `/admin/dashboard` route is the primary invitation-planning dashboard. `/admin/dashboard-v2` is now a compatibility redirect to the main dashboard. `/admin/rsvps` and the default `/admin` route also lead to the overview. No backend or database changes are required.
 
 ## What the numbers mean
 
@@ -15,19 +15,19 @@ Full admins can inspect/filter tags. Restricted admins cannot see tag filters, l
 
 ## Interface
 
-V2 uses a scoped slate-and-blue light theme, compact navigation, prominent total headcounts, event-first cards, and expandable filters, tag breakdowns, and guest details. Existing admin pages and public invitation styling are untouched.
+The overview, Guests, Events, Photos, sign-in, loading/access status, tag dialogs, and location editor use the slate-and-blue light theme. Shared admin navigation links directly to the production Overview; there is no version switch. Guest CSV import is expandable to keep the guest list easier to reach on mobile. Public invitation styling is untouched.
 
 The planning CSV contains Guest, Party size, Event, and (for full admins) Tags. A party invited to several events has one row per event, so summing the whole CSV's party-size column is not a unique overall headcount. Unassigned parties are exported once; parties whose assigned event is unavailable are retained with an explicit label. The filename is `wedding-invitations-filtered.csv`, and spreadsheet formula escaping is retained.
 
 ## Verification
 
-The implementation includes helper and component tests for count deduplication, RSVP independence, overlapping tags/events, filtering, empty and unassigned records, restricted privacy, exports, error/retry/refresh behavior, collapsed details, and route isolation. All 144 frontend tests and the production build pass. The build reports stylesheet-size warnings for the existing public Gallery and the isolated v2 stylesheet (7.56 KB; below the 8 KB error limit).
+The implementation includes helper and component tests for count deduplication, RSVP independence, overlapping tags/events, filtering, empty and unassigned records, restricted privacy, exports, error/retry/refresh behavior, collapsed details, and route isolation. All 156 frontend tests and the production build pass. The build reports stylesheet-size warnings for the existing public Gallery and the isolated v2 stylesheet (7.56 KB; below the 8 KB error limit).
 
-Browser visual checks on 320–430 px phones and desktop are still pending: the host Mac was locked during implementation. Before release, inspect overflow, long labels, large counts, expanded tag/guest sections, keyboard focus, and text enlargement. Publish through the existing `main` branch / Vercel workflow. The legacy dashboard remains the default route after publication.
+Browser visual checks on 320–430 px phones and desktop are still pending: the host Mac was locked during implementation. Before release, inspect overflow, long labels, large counts, expanded tag/guest sections, keyboard focus, and text enlargement. Publish through the existing `main` branch / Vercel workflow. The modern invitation overview is the default admin dashboard after publication.
 
 ## Event entry register PDF
 
-Open **Export event entry register** in v2. Select an event, then download an A4 portrait register. The full invitation list for that event is the default, independent of dashboard search/tag filters and all RSVP responses. An explicit subset option applies current search and permitted tags; every PDF page is marked FILTERED REGISTER and repeats its scope.
+Open **Export event entry register** in Overview. Select an event, then download an A4 portrait register. The full invitation list for that event is the default, independent of dashboard search/tag filters and all RSVP responses. An explicit subset option applies current search and permitted tags; every PDF page is marked FILTERED REGISTER and repeats its scope.
 
 The mandatory alphabetical guest list has one row per party, recorded invited headcount, and blank Admitted and Notes fields. Event/date/venue, party/people totals, generation/data timestamps in India time, table headings, and page numbers repeat. Rows stay together across page breaks. Tags appear inline alongside party names only for full admins, wrapping naturally for longer entries. Compact row spacing retains writable admission and notes fields. An optional unassigned appendix starts a separate page and is marked for review, not admission.
 

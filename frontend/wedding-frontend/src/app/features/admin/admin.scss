@@ -1,3 +1,260 @@
- :host {display:block; min-height:100vh; background:linear-gradient(25deg,#f2e2c0,#f7ecd5); color:#214f38; padding:2rem 1rem; box-sizing:border-box; font-family:Georgia,serif} .admin-page {max-width:1100px; margin:auto} h1,h2 {font-weight:400} h1 {font-size:2.4rem} label {display:block; margin:.8rem 0; font-family:Arial,sans-serif; font-size:.9rem} input,select,textarea {display:block; width:100%; box-sizing:border-box; padding:.7rem; border:1px solid #baaa8c; border-radius:.4rem; background:#fffaf0; color:#214f38; margin-top:.3rem; font:inherit} input[type=checkbox] {width:auto; display:inline-block} button,.button {display:inline-block; background:#214f38; color:#fffaf0; padding:.7rem 1rem; border:0; border-radius:.4rem; cursor:pointer; font:inherit; text-decoration:none; margin:.25rem .5rem .25rem 0} button:disabled {opacity:.55; cursor:wait} .secondary {background:transparent; color:#214f38; border:1px solid #214f38} .error {color:#94412e; padding:.7rem; border-left:3px solid #aa563d} .success {padding:.7rem; background:#e6ebd7} .panel {padding:1.4rem; margin:1rem 0; background:#fffaf0aa; border:1px solid #d9cbaa; border-radius:.6rem} .table-wrap {overflow-x:auto} table {border-collapse:collapse; width:100%; font-family:Arial,sans-serif; font-size:.9rem} th,td {padding:.8rem; border-bottom:1px solid #d9cbaa; text-align:left} .filters,.metrics,.fields {display:grid; grid-template-columns:repeat(auto-fit,minmax(190px,1fr)); gap:1rem} .metric {padding:1rem; background:#fffaf0aa; border:1px solid #d9cbaa; border-radius:.5rem} .metric strong {display:block; font-size:1.8rem} .hint {font-family:Arial,sans-serif; font-size:.85rem; color:#526148} .status {font-family:Arial,sans-serif} a {color:#94412e} @media(max-width:600px){:host{padding:1rem .7rem} h1{font-size:2rem} th,td{padding:.5rem} .panel{padding:1rem}}
+:host {
+  --admin-bg: #f8fafc;
+  --admin-surface: #fff;
+  --admin-ink: #0f172a;
+  --admin-muted: #475569;
+  --admin-line: #e2e8f0;
+  --admin-accent: #2563eb;
+  display: block;
+  min-height: 100dvh;
+  background: var(--admin-bg);
+  color: var(--admin-ink);
+  padding: 0 16px 32px;
+  box-sizing: border-box;
+  font:
+    400 15px/1.5 'DM Sans',
+    sans-serif;
+  color-scheme: light;
+  font-variant-numeric: tabular-nums;
+}
+* {
+  box-sizing: border-box;
+}
+.admin-page {
+  max-width: 1064px;
+  margin: auto;
+  min-width: 0;
+}
+h1,
+h2,
+h3 {
+  color: var(--admin-ink);
+  overflow-wrap: anywhere;
+}
+h1 {
+  font-size: clamp(28px, 5vw, 36px);
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: -0.035em;
+  margin: 0 0 12px;
+}
+h2 {
+  font-size: 20px;
+  font-weight: 600;
+  line-height: 1.4;
+  letter-spacing: -0.02em;
+  margin: 0 0 12px;
+}
+h3 {
+  font-size: 18px;
+  font-weight: 600;
+}
+p {
+  margin: 8px 0;
+}
+label {
+  display: block;
+  margin: 14px 0;
+  font-size: 13px;
+  font-weight: 600;
+  min-width: 0;
+}
+input,
+select,
+textarea {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  min-height: 46px;
+  padding: 11px 12px;
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  background: var(--admin-surface);
+  color: var(--admin-ink);
+  margin-top: 6px;
+  font:
+    400 16px/1.5 'DM Sans',
+    sans-serif;
+}
+textarea {
+  resize: vertical;
+}
+input[type='checkbox'] {
+  min-height: 20px;
+  width: 20px;
+  height: 20px;
+  display: inline-block;
+  vertical-align: middle;
+  margin: 0 8px 0 0;
+  accent-color: var(--admin-accent);
+}
+label:has(input[type='checkbox']) {
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+}
+fieldset {
+  min-width: 0;
+  border: 0;
+  padding: 0;
+  margin: 0;
+}
+summary {
+  min-height: 44px;
+  cursor: pointer;
+  font-weight: 600;
+}
+.import-panel[open] > summary {
+  margin-bottom: 16px;
+}
+legend {
+  font-size: 13px;
+  font-weight: 600;
+}
+button,
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  max-width: 100%;
+  gap: 8px;
+  background: var(--admin-accent);
+  color: #fff;
+  padding: 10px 16px;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  cursor: pointer;
+  font:
+    600 14px/1.5 'DM Sans',
+    sans-serif;
+  text-decoration: none;
+  margin: 4px 8px 4px 0;
+}
+button:hover,
+.button:hover {
+  filter: brightness(0.97);
+}
+button:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+.secondary {
+  background: #fff;
+  color: var(--admin-muted);
+  border-color: var(--admin-line);
+}
+a {
+  color: #1d4ed8;
+}
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+summary:focus-visible {
+  outline: 3px solid var(--admin-accent);
+  outline-offset: 3px;
+}
+.error {
+  color: #9f1239;
+  padding: 12px;
+  border: 1px solid #fecdd3;
+  background: #fff1f2;
+  border-radius: 10px;
+}
+.success {
+  color: #166534;
+  padding: 12px;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 10px;
+}
+.panel {
+  padding: 20px;
+  margin: 20px 0;
+  background: var(--admin-surface);
+  border: 1px solid var(--admin-line);
+  border-radius: 16px;
+}
+.table-wrap {
+  overflow-x: auto;
+}
+table {
+  border-collapse: collapse;
+  width: 100%;
+  font: inherit;
+  font-size: 14px;
+  background: #fff;
+}
+th,
+td {
+  padding: 14px;
+  border-bottom: 1px solid var(--admin-line);
+  text-align: left;
+}
+th {
+  background: #f1f5f9;
+  color: var(--admin-muted);
+  font-size: 12px;
+  font-weight: 600;
+}
+.filters,
+.metrics,
+.fields {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 190px), 1fr));
+  gap: 16px;
+}
+.metric {
+  padding: 20px;
+  background: #fff;
+  border: 1px solid var(--admin-line);
+  border-radius: 14px;
+}
+.metric strong {
+  display: block;
+  font-size: 32px;
+  color: #1d4ed8;
+}
+.hint,
+.status {
+  font: inherit;
+  color: var(--admin-muted);
+  font-size: 13px;
+  line-height: 1.6;
+}
+.operation-notice {
+  position: sticky;
+  top: 8px;
+  z-index: 10;
+  box-shadow: 0 4px 12px #0f172a08;
+}
+@media (min-width: 640px) {
+  :host {
+    padding: 0 28px 40px;
+  }
+}
+@media (max-width: 600px) {
+  th,
+  td {
+    padding: 10px;
+  }
+  .panel {
+    padding: 16px;
+  }
+}
 
-.operation-notice {position:sticky;top:.5rem;z-index:10;border:1px solid #a9b49c;border-radius:.5rem;box-shadow:0 2px 8px #214f3815}
+.page-heading {
+  margin-bottom: 20px;
+}
+.eyebrow {
+  margin: 0 0 8px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.13em;
+  color: var(--admin-accent);
+}
+.page-subtitle {
+  color: var(--admin-muted);
+}

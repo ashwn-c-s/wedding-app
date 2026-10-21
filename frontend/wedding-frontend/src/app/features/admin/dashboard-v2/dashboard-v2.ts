@@ -1,7 +1,7 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { DatePipe, DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { AdminNav } from '../admin-nav/admin-nav';
 import { AdminService } from '../../../core/services/admin.service';
 import { AdminAuthService } from '../../../core/services/admin-auth.service';
 import { DashboardData } from '../../../core/models/admin';
@@ -15,13 +15,12 @@ import {
 
 @Component({
   selector: 'app-dashboard-v2',
-  imports: [FormsModule, RouterLink, DecimalPipe, DatePipe, EventRegisterExport],
+  imports: [FormsModule, AdminNav, DecimalPipe, DatePipe, EventRegisterExport],
   templateUrl: './dashboard-v2.html',
   styleUrl: './dashboard-v2.scss',
 })
 export class DashboardV2 {
   private readonly api = inject(AdminService);
-  private readonly router = inject(Router);
   readonly auth = inject(AdminAuthService);
   readonly data = signal<DashboardData>({ guests: [], events: [], responses: [] });
   readonly read = new AdminReadState();
@@ -30,8 +29,6 @@ export class DashboardV2 {
   readonly eventId = signal('');
   readonly tagIds = signal<string[]>([]);
   readonly lastRefreshed = signal<Date | null>(null);
-  readonly logoutBusy = signal(false);
-  readonly logoutError = signal('');
   private readonly filters = computed(() => ({
     search: this.search(),
     eventId: this.eventId(),
@@ -112,19 +109,5 @@ export class DashboardV2 {
     link.download = 'wedding-invitations-filtered.csv';
     link.click();
     URL.revokeObjectURL(url);
-  }
-
-  async logout() {
-    if (this.logoutBusy()) return;
-    this.logoutBusy.set(true);
-    this.logoutError.set('');
-    try {
-      await this.auth.logout();
-      await this.router.navigate(['/admin/login']);
-    } catch {
-      this.logoutError.set('Unable to sign out. Please try again.');
-    } finally {
-      this.logoutBusy.set(false);
-    }
   }
 }
