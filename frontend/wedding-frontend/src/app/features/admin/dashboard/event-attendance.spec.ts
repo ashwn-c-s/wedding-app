@@ -34,7 +34,7 @@ describe('Event invitation totals',()=>{
   });
   it('respects search, event and tag filters without counting a party twice',async()=>{
     const component=TestBed.runInInjectionContext(()=>new Dashboard());await component.load();
-    component.tagId.set(office.id);component.eventId.set('wedding');
+    component.tagIds.set([office.id]);component.eventId.set('wedding');
     expect(component.eventSummary()).toEqual([{id:'wedding',name:'Wedding',invited:2,peopleInvited:7}]);
     component.search.set('Declining');expect(component.eventSummary()[0]).toMatchObject({invited:1,peopleInvited:5});
     component.data.set({...data,responses:[]});expect(component.eventSummary()[0]).toMatchObject({invited:1,peopleInvited:5});

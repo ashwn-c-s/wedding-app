@@ -21,3 +21,11 @@ Validation: all 122 frontend tests pass and production build succeeds. Card test
 Each tag card now displays Total people invited and one row for each event's invited people, including zero counts. The total counts each guest party once within the tag; event rows count that party for each event assignment. Event counts are therefore not added together to derive the unique total. An event filter narrows both the tag total and its event rows; search and tag filters remain active. Untagged gets the same breakdown. Restricted admins still see no tag cards.
 
 Validation: 124 frontend tests pass and the production build succeeds. New rendered checks verify every tag's event rows, including empty-tag and Untagged zeros. Counting checks verify a party assigned to multiple events is unique in the total and verify combined event/tag/search filters. No schema or backend changes. Manual mobile visual verification remains pending.
+
+## Multiple tag selection
+
+The dashboard Tags filter is now a checkbox selector supporting multiple tags and Untagged together. It matches any selected group (OR); no selection means all guests. Native details/summary controls open the selector, Escape closes it and returns focus to its summary, and Clear tag selection resets only tags. Checkbox rows have 44-pixel targets and long labels wrap within the filter.
+
+Guest parties matching several selected tags are counted once in the overall totals and once per assigned event. Selected tag cards retain their individual overlapping totals and event breakdowns. Search and event filters, CSV export and Clear filters all use the new selection state. Restricted admins neither see nor apply private tag selections. The separate admin Guests page keeps its existing single-tag filter.
+
+Validation: 126 frontend tests pass; production build succeeds with the same existing gallery stylesheet warning. New tests cover overlapping selections, Untagged combinations, filter combinations, unique totals/export rows, selecting/unselecting, clearing, checkbox UI and Escape. No schema/backend changes. Manual mobile visual testing was not performed.

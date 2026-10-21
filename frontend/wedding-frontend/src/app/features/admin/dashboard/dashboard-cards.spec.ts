@@ -34,7 +34,7 @@ describe('Dashboard people cards',()=>{
     const component=TestBed.runInInjectionContext(()=>new Dashboard());await component.load();
     component.eventId.set('reception');
     expect(component.tagSummary().map(tag=>[tag.id,tag.peopleInvited])).toEqual([['office',3],['family',3],['unused',0],['untagged',4]]);
-    component.tagId.set('office');expect(component.tagSummary()).toEqual([{...office,invited:1,peopleInvited:3,events:[{id:'reception',name:'Reception',peopleInvited:3}]}]);
+    component.tagIds.set(['office']);expect(component.tagSummary()).toEqual([{...office,invited:1,peopleInvited:3,events:[{id:'reception',name:'Reception',peopleInvited:3}]}]);
     expect(component.eventSummary()[0].peopleInvited).toBe(3);
     component.search.set('Missing');expect(component.tagSummary()[0].peopleInvited).toBe(0);
     component.clearFilters();component.data.set({...data,responses:[]});expect(component.tagSummary()[0].peopleInvited).toBe(5);
@@ -52,7 +52,7 @@ describe('Dashboard people cards',()=>{
   it('keeps tag totals unique across events and shows only the selected event breakdown',async()=>{
     const component=TestBed.runInInjectionContext(()=>new Dashboard());await component.load();
     expect(component.tagSummary()[1]).toMatchObject({peopleInvited:3,events:[{id:'wedding',peopleInvited:3},{id:'reception',peopleInvited:3}]});
-    component.eventId.set('wedding');component.tagId.set('office');
+    component.eventId.set('wedding');component.tagIds.set(['office']);
     expect(component.tagSummary()[0]).toMatchObject({peopleInvited:5,events:[{id:'wedding',peopleInvited:5}]});
     component.search.set('Anita');expect(component.tagSummary()[0]).toMatchObject({peopleInvited:3,events:[{id:'wedding',peopleInvited:3}]});
   });

@@ -5,7 +5,7 @@ import { FormsModule } from '@angular/forms';
 import { AdminService } from '../../../core/services/admin.service';
 import { DashboardData } from '../../../core/models/admin';
 import { attendanceRows, attendanceSummary, buildCsv } from '../../../core/utils/admin';
-import { matchesTag } from '../../../core/utils/tags';
+import { matchesTag, matchesAnyTag } from '../../../core/utils/tags';
 import { AdminAuthService } from '../../../core/services/admin-auth.service';
 import { AdminNav } from '../admin-nav/admin-nav';
 @Component({
@@ -22,8 +22,14 @@ export class Dashboard {
   loading = this.read.loading;
   search = signal('');
   eventId = signal('');
-  tagId = signal('');
-  taggedData = computed(() => ({...this.data(),guests:this.data().guests.filter(guest=>matchesTag(guest.tags,this.auth.role()==='full'?this.tagId():''))}));
+  tagIds = signal<string[]>([]);
+  selectedTagsLabel = computed(() => this.tagIds().length
+    ? this.tagIds().map(id => id === 'untagged' ? 'Untagged' : this.data().tags?.find(tag => tag.id === id)?.name || 'Selected tag').join(', ')
+    : 'All tags');
+  toggleTag(id: string, selected: boolean) {
+    this.tagIds.update(ids => selected ? [...new Set([...ids, id])] : ids.filter(existing => existing !== id));
+  }
+  taggedData = computed(() => ({...this.data(),guests:this.data().guests.filter(guest=>matchesAnyTag(guest.tags,this.auth.role()==='full'?this.tagIds():[]))}));
   rows = computed(() => attendanceRows(this.taggedData(), this.search(), this.eventId()));
   summary = computed(() =>
     attendanceSummary(
@@ -53,7 +59,7 @@ export class Dashboard {
     const events = this.data().events.filter(event => !this.eventId() || event.id === this.eventId());
     const tags = this.data().tags ?? [...new Map(this.data().guests.flatMap(guest => guest.tags || []).map(tag => [tag.id, tag])).values()];
     return [...tags, {id:'untagged',name:'Untagged'}]
-      .filter(tag => !this.tagId() || tag.id === this.tagId())
+      .filter(tag => !this.tagIds().length || this.tagIds().includes(tag.id))
       .map(tag => {
         const parties = guests.filter(guest => matchesTag(guest.tags, tag.id));
         return {
@@ -69,7 +75,7 @@ export class Dashboard {
   async load() {
     return this.read.run(() => adminRead(this.api.dashboard()), value => this.data.set(value), 'Unable to load RSVP results. Please retry.');
   }
-  clearFilters() { this.search.set(''); this.eventId.set(''); this.tagId.set(''); }
+  clearFilters() { this.search.set(''); this.eventId.set(''); this.tagIds.set([]); }
   exportRows() {
     return [
       ['Guest', 'Party size', 'Event', 'Response', 'Submitted at',...(this.auth.role()==='full'?['Tags']:[])],

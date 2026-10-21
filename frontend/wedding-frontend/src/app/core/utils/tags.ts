@@ -11,3 +11,7 @@ export function matchesTag(tags: GuestTag[] | undefined, filter: string): boolea
     !filter || (filter === 'untagged' ? !tags?.length : !!tags?.some((tag) => tag.id === filter))
   );
 }
+
+export function matchesAnyTag(tags: GuestTag[] | undefined, filters: string[]): boolean {
+  return !filters.length || filters.some(filter => matchesTag(tags, filter));
+}
