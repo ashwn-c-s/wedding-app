@@ -42,10 +42,17 @@
     @if(auth.role() === 'full') {
       <section aria-labelledby="tag-cards-title">
         <h2 id="tag-cards-title">People invited by tag</h2>
-        <p class="hint">Each party counts once per tag. Parties with several tags appear in each group, so tag totals can overlap.</p>
+        <p class="hint">Each total counts a party once. Event rows count that party in each assigned event. Parties with several tags appear in each group, so tag totals can overlap.</p>
         <div class="metrics tag-metrics">
           @for(tag of tagSummary(); track tag.id) {
-            <div class="metric"><h3>{{tag.name}}</h3><strong>{{tag.peopleInvited}}</strong><span>People invited</span></div>
+            <div class="metric">
+              <h3>{{tag.name}}</h3><strong>{{tag.peopleInvited}}</strong><span>Total people invited</span>
+              <dl class="tag-event-breakdown">
+                @for(event of tag.events; track event.id) {
+                  <div><dt>{{event.name}}</dt><dd>{{event.peopleInvited}}</dd></div>
+                } @empty {<div><dt>No events available.</dt><dd>—</dd></div>}
+              </dl>
+            </div>
           }
         </div>
       </section>

@@ -1,0 +1,4 @@
+.tag-event-breakdown { margin: 1rem 0 0; padding-top: .6rem; border-top: 1px solid #d9cbaa; font: .9rem/1.5 Arial, sans-serif; }
+.tag-event-breakdown > div { display: flex; align-items: baseline; justify-content: space-between; gap: .75rem; padding: .3rem 0; }
+.tag-event-breakdown dt { min-width: 0; overflow-wrap: anywhere; }
+.tag-event-breakdown dd { margin: 0; font-weight: 600; flex-shrink: 0; font-variant-numeric: tabular-nums; }

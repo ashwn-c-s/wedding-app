@@ -34,10 +34,27 @@ describe('Dashboard people cards',()=>{
     const component=TestBed.runInInjectionContext(()=>new Dashboard());await component.load();
     component.eventId.set('reception');
     expect(component.tagSummary().map(tag=>[tag.id,tag.peopleInvited])).toEqual([['office',3],['family',3],['unused',0],['untagged',4]]);
-    component.tagId.set('office');expect(component.tagSummary()).toEqual([{...office,invited:1,peopleInvited:3}]);
+    component.tagId.set('office');expect(component.tagSummary()).toEqual([{...office,invited:1,peopleInvited:3,events:[{id:'reception',name:'Reception',peopleInvited:3}]}]);
     expect(component.eventSummary()[0].peopleInvited).toBe(3);
     component.search.set('Missing');expect(component.tagSummary()[0].peopleInvited).toBe(0);
     component.clearFilters();component.data.set({...data,responses:[]});expect(component.tagSummary()[0].peopleInvited).toBe(5);
+  });
+  it('renders total and per-event people for each tag, including zero and untagged groups',async()=>{
+    const fixture=TestBed.createComponent(Dashboard);await fixture.componentInstance.load();fixture.detectChanges();
+    const cards=[...fixture.nativeElement.querySelectorAll('.tag-metrics .metric')] as HTMLElement[];
+    expect(cards[0].textContent).toContain('Total people invited');
+    const breakdown=(card:HTMLElement)=>[...card.querySelectorAll('.tag-event-breakdown > div')].map(row=>[row.querySelector('dt')?.textContent,row.querySelector('dd')?.textContent]);
+    expect(breakdown(cards[0])).toEqual([['Wedding','5'],['Reception','3']]);
+    expect(breakdown(cards[1])).toEqual([['Wedding','3'],['Reception','3']]);
+    expect(breakdown(cards[2])).toEqual([['Wedding','0'],['Reception','0']]);
+    expect(breakdown(cards[3])).toEqual([['Wedding','0'],['Reception','4']]);
+  });
+  it('keeps tag totals unique across events and shows only the selected event breakdown',async()=>{
+    const component=TestBed.runInInjectionContext(()=>new Dashboard());await component.load();
+    expect(component.tagSummary()[1]).toMatchObject({peopleInvited:3,events:[{id:'wedding',peopleInvited:3},{id:'reception',peopleInvited:3}]});
+    component.eventId.set('wedding');component.tagId.set('office');
+    expect(component.tagSummary()[0]).toMatchObject({peopleInvited:5,events:[{id:'wedding',peopleInvited:5}]});
+    component.search.set('Anita');expect(component.tagSummary()[0]).toMatchObject({peopleInvited:3,events:[{id:'wedding',peopleInvited:3}]});
   });
   it('does not expose private tag cards to restricted admins',async()=>{
     role='restricted';const fixture=TestBed.createComponent(Dashboard);await fixture.componentInstance.load();fixture.detectChanges();

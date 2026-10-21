@@ -12,7 +12,7 @@ import { AdminNav } from '../admin-nav/admin-nav';
   selector: 'app-admin-dashboard',
   imports: [FormsModule, AdminNav, AdminReadStatus],
   templateUrl: './dashboard.html',
-  styleUrl: '../admin.scss',
+  styleUrls: ['../admin.scss', './dashboard.scss'],
 })
 export class Dashboard {
   private api = inject(AdminService);
@@ -50,12 +50,17 @@ export class Dashboard {
       .filter(guest => guest.name.toLocaleLowerCase().includes(this.search().trim().toLocaleLowerCase())
         && (!this.eventId() || guest.event_ids.includes(this.eventId())))
       .map(guest => [guest.id, guest])).values()];
+    const events = this.data().events.filter(event => !this.eventId() || event.id === this.eventId());
     const tags = this.data().tags ?? [...new Map(this.data().guests.flatMap(guest => guest.tags || []).map(tag => [tag.id, tag])).values()];
     return [...tags, {id:'untagged',name:'Untagged'}]
       .filter(tag => !this.tagId() || tag.id === this.tagId())
       .map(tag => {
         const parties = guests.filter(guest => matchesTag(guest.tags, tag.id));
-        return {...tag, invited:parties.length, peopleInvited:parties.reduce((sum, guest) => sum + guest.party_size, 0)};
+        return {
+          ...tag, invited:parties.length, peopleInvited:parties.reduce((sum, guest) => sum + guest.party_size, 0),
+          events:events.map(event => ({id:event.id,name:event.name,
+            peopleInvited:parties.filter(guest => guest.event_ids.includes(event.id)).reduce((sum, guest) => sum + guest.party_size, 0)})),
+        };
       });
   });
   constructor() {
